@@ -1,0 +1,37 @@
+﻿<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FatiBillets — Billetterie en ligne</title>
+<meta name="description" content="FatiBillets : réservez vos billets de concerts, festivals, spectacles et conférences. Billets sécurisés par QR code.">
+<link rel="icon" href="logo.jpg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="logo" href="#/"><img src="logo.jpg" alt="FatiBillet" class="logo-img"></a>
+    <nav id="nav" class="nav"></nav>
+    <div id="auth" class="role"></div>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><b>FATIGLOBAL</b> — Une seule plateforme, plusieurs services, une ambition internationale.</div>
+    <div class="foot-r">© FatiBillets</div>
+  </div>
+</footer>
+
+<dialog id="dlg"></dialog>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="lib/qrcode.js"></script>
+<script src="lib/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
