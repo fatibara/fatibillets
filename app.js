@@ -44,6 +44,8 @@ const ICONS = {
   clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
   user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
   cam: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/>',
+  grid: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
 };
 const ic = n => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
 
@@ -112,7 +114,7 @@ const denied = () => box('Accès refusé', `<p>Votre compte n'a pas accès à ce
 /* ---------- vues publiques ---------- */
 async function vHome() {
   const D = await loadData(), cats = D.cats.filter(c => c.active && D.events.some(e => e.category === c.name));
-  return `<section class="hero"><div class="wrap hero-in"><div><span class="eyebrow">Guinée · Afrique · International</span><h1>Vos événements, vos billets,<br>une seule plateforme.</h1><p class="lead">Concerts, festivals, spectacles, conférences : réservez en quelques secondes et recevez votre billet sécurisé par QR code.</p>
+  return `<section class="hero"><div class="wrap hero-in"><div><span class="eyebrow">Guinée · Afrique · International</span><h1>Vos événements, vos billets, <br>une seule plateforme.</h1><p class="lead">Concerts, festivals, spectacles, conférences : réservez en quelques secondes et recevez votre billet sécurisé par QR code.</p>
   <div class="search"><input id="q" data-i="q" value="${esc(UI.q)}" placeholder="Rechercher : nom, ville, mot-clé…" aria-label="Rechercher un événement"><button class="btn" data-a="goResults">Rechercher</button></div></div>${ring(D.events)}</div></section>
   <section class="sec" id="results-sec"><div class="wrap stack"><div class="row between"><h2>Découvrir les événements</h2><label class="row sm mut">Trier par <select class="in" data-i="sort" style="width:auto;margin:0"><option value="date">Date</option><option value="price">Prix</option></select></label></div>
   <div class="chips">${[['', 'Toutes les dates'], ['today', "Aujourd'hui"], ['tomorrow', 'Demain'], ['week', 'Cette semaine'], ['nextweek', 'Semaine prochaine'], ['month', 'Ce mois'], ['nextmonth', 'Mois prochain']].map(([v, l]) => `<button class="chip ${UI.when === v ? 'on' : ''}" data-a="when" data-v="${v}">${l}</button>`).join('')}</div>
@@ -139,13 +141,14 @@ async function vEvent(id) {
   <div class="facts"><div class="fact"><small>Lieu</small><b>${esc(ev.venue || '—')}</b></div><div class="fact"><small>Ville · Pays</small><b>${esc(ev.city || '')} · ${esc(ev.country || '')}</b></div><div class="fact"><small>Organisateur</small><b>${esc(ev.org_name || '—')}</b></div><div class="fact"><small>Public</small><b>${esc(ev.audience || 'Tout public')}</b></div></div>
   ${ev.access ? `<div class="note"><b>Conditions d'accès :</b> ${esc(ev.access)}</div>` : ''}
   ${A.length ? `<div><h2>Artistes et invités à l'affiche</h2><div class="artists">${A.map(a => `<div class="artist"><div class="av">${esc(initials(a.name))}</div><div><b>${esc(a.name)}</b><div class="xs" style="color:var(--o-d);font-weight:700">${esc(a.role || '')}</div></div></div>`).join('')}</div></div>` : ''}</div>
-  <aside class="card pad sticky stack"><div class="row between"><h3 style="margin:0">Réserver</h3>${badge(st)}</div>
+  <aside class="card pad sticky stack" id="book"><div class="row between"><h3 style="margin:0">Réserver</h3>${badge(st)}</div>
   ${st[0] === 'Terminé' ? '<p class="mut">Cet événement est terminé.</p>' : st[0] === 'Annulé' ? '<p class="mut">Cet événement a été annulé.</p>' : ''}
   ${d && !closed ? `<div><div class="sm mut" style="font-weight:650;margin-bottom:6px">1. Choisissez la date</div><div class="dates">${up.map(x => `<button class="date ${x.id === dId ? 'on' : ''}" data-a="pickDate" data-ev="${ev.id}" data-d="${x.id}"><b>${dFmt(x.start)}</b><span class="xs mut">${hFmt(x.start)}</span></button>`).join('')}</div></div>
   <div><div class="sm mut" style="font-weight:650">2. Choisissez la catégorie</div>${tiers}</div>
   ${st[0] === 'SOLD OUT' ? '<div class="soldout">SOLD OUT – PLACES ÉPUISÉES</div>' : `<div class="total"><span>Total</span><span>${count ? fmt(total, cur) : '—'}</span></div>
   ${count ? `<form class="stack" data-f="reserve" data-date="${dId}"><div class="sm mut" style="font-weight:650">3. Vos coordonnées</div><label class="f">Nom complet<input name="name" required minlength="3" autocomplete="name" value="${esc(ME?.full_name || '')}"></label><label class="f">Téléphone<input name="phone" required pattern="[+0-9 ]{8,}" inputmode="tel" autocomplete="tel" value="${esc(ME?.phone || '')}" placeholder="+224 6XX XX XX XX"></label><label class="f">E-mail<input name="email" type="email" required autocomplete="email" value="${esc(ME?.email || '')}"></label><button class="btn xl">Réserver ${count} billet${count > 1 ? 's' : ''}</button></form>` : '<button class="btn xl" disabled>Réserver</button>'}
-  <p class="xs mut" style="text-align:center;margin:0">Vos places sont bloquées 30 minutes le temps du paiement.${ME ? '' : ' Aucun compte n\'est nécessaire.'}</p>`}` : ''}</aside></div></div>`;
+  <p class="xs mut" style="text-align:center;margin:0">Vos places sont bloquées 30 minutes le temps du paiement.${ME ? '' : ' Aucun compte n\'est nécessaire.'}</p>`}` : ''}</aside></div></div>
+  ${d && !closed && st[0] !== 'SOLD OUT' ? `<button class="btn m-cta" data-a="toBook">${ic('ticket')} Réserver · ${(p => p === 0 ? 'Gratuit' : 'dès ' + money(p, cur))(Math.min(...d.tiers.filter(t => t.avail > 0).map(t => +t.price)))}</button>` : ''}`;
 }
 const oStatus = s => ({ en_attente: ['En attente de paiement', 'orange'], a_verifier: ['Paiement en vérification', 'blue'], confirme: ['Confirmée', 'green'], expire: ['Expirée', 'gray'], annule: ['Annulée', 'red'], a_rembourser: ['Remboursement en cours', 'red'] }[s] || [s, 'gray']);
 function orderBody(o) {
@@ -269,11 +272,12 @@ async function vAdmin(tab = 'vue') {
 
 /* ---------- routeur ---------- */
 function nav(p, h) {
-  const l = [['#/', 'Événements'], ['#/billets', 'Mes billets']];
-  if (role() === 'organisateur') l.push(['#/org', 'Espace organisateur']);
-  if (['organisateur', 'scanner', 'admin'].includes(role())) l.push(['#/scan', 'Scanner']);
-  if (role() === 'admin') l.push(['#/admin', 'Administration']);
-  $('#nav').innerHTML = l.map(([u, t]) => `<a href="${u}" class="${(u === '#/' ? ['', 'e'].includes(p[0]) : u === '#/billets' ? ['billets', 'commande'].includes(p[0]) : h.startsWith(u)) ? 'on' : ''}">${t}</a>`).join('');
+  const l = [['#/', 'Événements', 'Événements', 'cal'], ['#/billets', 'Mes billets', 'Billets', 'ticket']];
+  if (role() === 'organisateur') l.push(['#/org', 'Espace organisateur', 'Espace', 'grid']);
+  if (['organisateur', 'scanner', 'admin'].includes(role())) l.push(['#/scan', 'Scanner', 'Scanner', 'cam']);
+  if (role() === 'admin') l.push(['#/admin', 'Administration', 'Admin', 'shield']);
+  l.push(ME ? ['#/compte', 'Mon compte', 'Compte', 'user', 'm-only'] : ['#/connexion', 'Connexion', 'Connexion', 'user', 'm-only']);
+  $('#nav').innerHTML = l.map(([u, t, s, i, c]) => `<a href="${u}" class="${c || ''} ${(u === '#/' ? ['', 'e'].includes(p[0]) : u === '#/billets' ? ['billets', 'commande'].includes(p[0]) : h.startsWith(u)) ? 'on' : ''}">${ic(i)}<span class="n-full">${t}</span><span class="n-short">${s}</span></a>`).join('');
   $('#auth').innerHTML = ME ? `<a class="btn s ghost" href="#/compte">${ic('user')} ${esc((ME.full_name || ME.email || '').split(' ')[0])}</a>` : `<a class="btn s" href="#/connexion">Connexion</a>`;
 }
 async function render() {
@@ -289,7 +293,7 @@ async function render() {
   if (my !== seq) return;
   app.innerHTML = html; app.dataset.v = h;
   const s = $('[data-i="sort"]'); if (s) s.value = UI.sort;
-  tick();
+  tick(); ctaSync();
 }
 function tick() {
   const el = $('[data-cd]'); if (!el) return;
@@ -304,6 +308,7 @@ const A = {
   close: closeModal,
   refresh() { DATA = null; render(); },
   goResults() { $('#results-sec').scrollIntoView(); },
+  toBook() { $('#book').scrollIntoView({ block: 'start', behavior: 'instant' }); ctaSync(); },
   when(el) { UI.when = el.dataset.v; render(); },
   cat(el) { UI.cat = el.dataset.v; render(); },
   authTab(el) { UI.authTab = el.dataset.v; render(); },
@@ -361,6 +366,10 @@ document.addEventListener('submit', async e => {
 document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.i; if (k && I[k]) I[k](e.target.value); });
 $('#dlg').addEventListener('click', e => { if (e.target.id === 'dlg') closeModal(); });
 addEventListener('hashchange', () => { closeModal(); render(); scrollTo(0, 0); });
+// Sur mobile, le bouton flottant « Réserver » disparaît dès que le bloc de réservation est à l'écran.
+function ctaSync() { const c = $('.m-cta'), b = $('#book'); if (c && b) c.classList.toggle('hide', b.getBoundingClientRect().top < innerHeight - 140); }
+document.addEventListener('scroll', ctaSync, { passive: true, capture: true });
+setInterval(ctaSync, 500);
 setInterval(tick, 1000);
 setInterval(() => { if (vOrder.poll && !document.hidden) render(); }, 15000);
 (async () => {
