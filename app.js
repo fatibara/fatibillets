@@ -44,6 +44,10 @@ const ICONS = {
   clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
   user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
   cam: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/>',
+  vote: '<path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  form: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>',
+  heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  cash: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
   grid: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
   shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
 };
@@ -56,10 +60,14 @@ async function loadData(force) {
     sb.from('events').select('*, event_dates!event_dates_event_id_fkey(*, tiers!tiers_date_id_fkey(*))'),
     sb.rpc('availability'), sb.from('categories').select('*').order('position')]);
   for (const r of [ev, av, cats]) if (r.error) throw new Error(r.error.message);
+  // Pays et devises : facultatifs tant que la base v2 n'est pas installée.
+  const [co, cu] = await Promise.all([sb.from('countries').select('*').order('name'), sb.from('currencies').select('*').order('code')]);
+  const countries = co.error || !co.data.length ? [{ code: 'GN', name: 'Guinée', currency: 'GNF', active: true }] : co.data;
+  const currencies = cu.error || !cu.data.length ? [{ code: 'GNF', name: 'Franc guinéen', active: true }] : cu.data;
   const A = Object.fromEntries(av.data.map(a => [a.tier_id, a.available]));
   const events = ev.data.map(e => ({ ...e, colors: [e.color1, e.color2], keywords: e.keywords || [], artists: e.artists || [],
     dates: (e.event_dates || []).map(d => ({ id: d.id, start: ts(d.starts_at), end: ts(d.ends_at), tiers: (d.tiers || []).sort((a, b) => a.position - b.position).map(t => ({ ...t, avail: A[t.id] ?? 0 })) })).sort((a, b) => a.start - b.start) })).filter(e => e.dates.length);
-  return DATA = { at: Date.now(), events, cats: cats.data };
+  return DATA = { at: Date.now(), events, cats: cats.data, countries, currencies };
 }
 async function loadMe() {
   const { data: { session } } = await sb.auth.getSession();
@@ -89,11 +97,13 @@ function inWhen(ev, w) {
 }
 
 /* ---------- gabarits communs ---------- */
-const poster = (ev, big) => `<div class="poster ${big ? 'big' : ''}" style="background:linear-gradient(135deg,${esc(ev.colors[0])},${esc(ev.colors[1])})">${badge(evStatus(ev))}<span class="p-cat">${esc(ev.category || '')} · ${esc(ev.city || '')}</span><span class="p-name">${esc(ev.name)}</span></div>`;
+// Fond d'une affiche : l'image envoyée par l'organisateur si elle existe, sinon un dégradé.
+const bg = (ev, deg = 135) => ev.image_url && /^https:\/\/[\w./%-]+$/.test(ev.image_url) ? `background:linear-gradient(180deg,rgba(0,0,0,.08) 35%,rgba(0,0,0,.78)),url('${ev.image_url}') center/cover` : `background:linear-gradient(${deg}deg,${esc(ev.colors[0])},${esc(ev.colors[1])})`;
+const poster = (ev, big) => `<div class="poster ${big ? 'big' : ''} ${ev.image_url ? 'img' : ''}" style="${bg(ev)}">${badge(evStatus(ev))}<span class="p-cat">${esc(ev.category || '')} · ${esc(ev.city || '')}</span><span class="p-name">${esc(ev.name)}</span></div>`;
 function evCard(ev) { const p = minPrice(ev); return `<a class="card ev" href="#/e/${ev.id}">${poster(ev)}<div class="ev-b"><b>${esc(ev.slogan || ev.name)}</b><span class="sm mut">${ic('cal')} ${dFmt(ev.dates[0].start)}${ev.dates.length > 1 ? ` · ${ev.dates.length} dates` : ' · ' + hFmt(ev.dates[0].start)}</span><span class="sm mut">${ic('pin')} ${esc(ev.venue || '')}, ${esc(ev.city || '')}</span><span class="price">${p === 0 ? 'Gratuit' : 'Dès ' + money(p, ev.currency)}</span></div></a>`; }
 function ring(list) {
   const l = list.filter(e => !['Terminé', 'Annulé'].includes(evStatus(e)[0])).slice(0, 8), n = l.length; if (n < 3) return '';
-  return `<div class="ring" style="--n:${n};--k:${(1 / (2 * Math.tan(Math.PI / n))).toFixed(4)}" aria-label="Événements à l'affiche"><div class="ring-spin">${l.map((e, i) => `<a class="ring-card poster" href="#/e/${e.id}" style="--i:${i};background:linear-gradient(160deg,${esc(e.colors[0])},${esc(e.colors[1])})">${badge(evStatus(e))}<span class="p-cat">${esc(e.category || '')} · ${esc(e.city || '')}</span><span class="p-name">${esc(e.name)}</span><span class="ring-meta">${ic('cal')} ${dFmt(e.dates[0].start)}</span></a>`).join('')}</div></div>`;
+  return `<div class="ring" style="--n:${n};--k:${(1 / (2 * Math.tan(Math.PI / n))).toFixed(4)}" aria-label="Événements à l'affiche"><div class="ring-spin">${l.map((e, i) => `<a class="ring-card poster ${e.image_url ? 'img' : ''}" href="#/e/${e.id}" style="--i:${i};${bg(e, 160)}">${badge(evStatus(e))}<span class="p-cat">${esc(e.category || '')} · ${esc(e.city || '')}</span><span class="p-name">${esc(e.name)}</span><span class="ring-meta">${ic('cal')} ${dFmt(e.dates[0].start)}</span></a>`).join('')}</div></div>`;
 }
 const tkBadge = s => s === 'valide' ? ['Valide', 'green'] : s === 'utilise' ? ['Utilisé', 'gray'] : ['Remboursé', 'red'];
 function ticketCard(k, o, actions = true) {
@@ -116,6 +126,7 @@ async function vHome() {
   const D = await loadData(), cats = D.cats.filter(c => c.active && D.events.some(e => e.category === c.name));
   return `<section class="hero"><div class="wrap hero-in"><div><span class="eyebrow">Guinée · Afrique · International</span><h1>Vos événements, vos billets, <br>une seule plateforme.</h1><p class="lead">Concerts, festivals, spectacles, conférences : réservez en quelques secondes et recevez votre billet sécurisé par QR code.</p>
   <div class="search"><input id="q" data-i="q" value="${esc(UI.q)}" placeholder="Rechercher : nom, ville, mot-clé…" aria-label="Rechercher un événement"><button class="btn" data-a="goResults">Rechercher</button></div></div>${ring(D.events)}</div></section>
+  <div class="wrap"><div class="services">${[['#/', 'ticket', 'Billetterie', 'Événements'], ['#/votes', 'vote', 'Votes', 'Concours'], ['#/cagnottes', 'heart', 'Cagnottes', 'Contributions'], ['#/inscriptions', 'form', 'Inscriptions', 'Candidatures']].map(([h, i, t, s]) => `<a class="svc" href="${h}"><i>${ic(i)}</i>${t}<small>${s}</small></a>`).join('')}</div></div>
   <section class="sec" id="results-sec"><div class="wrap stack"><div class="row between"><h2>Découvrir les événements</h2><label class="row sm mut">Trier par <select class="in" data-i="sort" style="width:auto;margin:0"><option value="date">Date</option><option value="price">Prix</option></select></label></div>
   <div class="chips">${[['', 'Toutes les dates'], ['today', "Aujourd'hui"], ['tomorrow', 'Demain'], ['week', 'Cette semaine'], ['nextweek', 'Semaine prochaine'], ['month', 'Ce mois'], ['nextmonth', 'Mois prochain']].map(([v, l]) => `<button class="chip ${UI.when === v ? 'on' : ''}" data-a="when" data-v="${v}">${l}</button>`).join('')}</div>
   ${cats.length ? `<div class="chips"><button class="chip ${UI.cat === '' ? 'on' : ''}" data-a="cat" data-v="">Toutes catégories</button>${cats.map(c => `<button class="chip ${UI.cat === c.name ? 'on' : ''}" data-a="cat" data-v="${esc(c.name)}">${esc(c.name)}</button>`).join('')}</div>` : ''}
@@ -193,9 +204,9 @@ function vAuth() {
   return `<div class="wrap sec"><div class="card pad stack" style="max-width:440px;margin:0 auto"><div class="tabs" style="margin-bottom:6px"><a href="#" data-a="authTab" data-v="in" class="${up ? '' : 'on'}">Connexion</a><a href="#" data-a="authTab" data-v="up" class="${up ? 'on' : ''}">Créer un compte</a></div>
   <form class="stack" data-f="${up ? 'signup' : 'signin'}">${up ? `<label class="f">Nom complet<input name="name" required minlength="3" autocomplete="name"></label><label class="f">Téléphone<input name="phone" required pattern="[+0-9 ]{8,}" inputmode="tel" autocomplete="tel"></label>` : ''}
   <label class="f">E-mail<input name="email" type="email" required autocomplete="email"></label><label class="f">Mot de passe<input name="password" type="password" required minlength="8" autocomplete="${up ? 'new-password' : 'current-password'}"></label>
-  <button class="btn xl">${up ? 'Créer mon compte' : 'Se connecter'}</button>${up ? '<p class="xs mut" style="margin:0">Le compte est gratuit. Il n\'est pas obligatoire pour acheter un billet.</p>' : ''}</form></div></div>`;
+  <button class="btn xl">${up ? 'Créer mon compte' : 'Se connecter'}</button>${up ? '<p class="xs mut" style="margin:0">Le compte est gratuit. Il n\'est pas obligatoire pour acheter un billet.</p>' : '<button type="button" class="link sm" data-a="forgot">Mot de passe oublié ?</button>'}</form></div></div>`;
 }
-const ROLE_L = { participant: 'Participant', organisateur: 'Organisateur', scanner: 'Scanner', admin: 'Administrateur général' };
+const ROLE_L = { participant: 'Participant', organisateur: 'Organisateur', scanner: 'Scanner', vendeur: 'Vendeur', admin: 'Administrateur général' };
 function vAccount() {
   if (!ME) return needLogin();
   return head('Mon compte', esc(ME.email)) + `<div class="wrap sec"><div class="cols"><div class="card pad stack"><h2>Profil</h2><div class="facts"><div class="fact"><small>Nom</small><b>${esc(ME.full_name || '—')}</b></div><div class="fact"><small>Téléphone</small><b>${esc(ME.phone || '—')}</b></div><div class="fact"><small>Rôle</small><b>${ROLE_L[ME.role]}</b></div><div class="fact"><small>Statut</small><b>${ME.status === 'actif' ? 'Actif' : 'Suspendu'}</b></div></div><div><button class="btn ghost" data-a="signout">Se déconnecter</button></div></div>
@@ -204,15 +215,21 @@ function vAccount() {
 const vNotFound = () => box('Page introuvable', `<a class="btn" href="#/">Retour à l'accueil</a>`);
 
 /* ---------- organisateur ---------- */
-async function vOrg() {
+const ORG_TABS = [['', 'Billetterie']], ORG_R = {}, ADMIN_TABS = [], ADMIN_R = {};
+async function vOrg(tab = '') {
   if (!ME) return needLogin(); if (role() !== 'organisateur') return denied();
+  const inner = ORG_R[tab] ? await ORG_R[tab]() : await orgTickets();
+  return head('Espace organisateur — ' + esc(ME.org_name || ME.full_name || ''), 'Vous ne voyez que vos propres activités et données.') + `<div class="wrap" style="padding-top:18px"><div class="tabs" style="margin-bottom:0">${ORG_TABS.map(([k, l]) => `<a class="${tab === k ? 'on' : ''}" href="#/org${k ? '/' + k : ''}">${l}</a>`).join('')}</div></div>` + inner;
+}
+async function orgTickets() {
   const D = await rpc('org_dashboard'), ev = D.events, rev = ev.reduce((a, e) => a + +e.revenue, 0), now = Date.now();
   const st = e => e.cancelled ? ['Annulé', 'gray'] : ts(e.ends_at) < now ? ['Terminé', 'gray'] : +e.available === 0 ? ['SOLD OUT', 'red'] : ['Billetterie ouverte', 'orange'];
-  return head('Tableau de bord — ' + esc(ME.org_name || ME.full_name || ''), 'Vous ne voyez que vos propres activités et données.') + `<div class="wrap sec stack">
+  window.__csv = D.tickets;
+  return `<div class="wrap sec stack" style="padding-top:22px">
   <div class="kpis"><div class="kpi hot"><small>Recettes billetterie</small><b>${money(rev)}</b></div><div class="kpi"><small>Billets vendus</small><b>${num(ev.reduce((a, e) => a + +e.sold, 0))}</b></div><div class="kpi"><small>Billets disponibles</small><b>${num(ev.reduce((a, e) => a + +e.available, 0))}</b></div><div class="kpi"><small>Paiements à vérifier</small><b>${D.pending.length}</b></div><div class="kpi"><small>Commission FATIGLOBAL (5 %)</small><b>${money(rev * COMM)}</b></div></div>
   <div class="card pad"><h2>Paiements à vérifier</h2>${D.pending.length ? `<div class="tw"><table><tr><th>Acheteur</th><th>Événement</th><th class="n">Billets</th><th class="n">Montant</th><th>Moyen · Référence</th><th></th></tr>${D.pending.map(o => `<tr><td><b>${esc(o.name)}</b><div class="xs mut">${esc(o.phone)} · ${dtFmt(o.created_at)}</div></td><td>${esc(o.event)}</td><td class="n">${o.n}</td><td class="n"><b>${money(o.total, o.currency)}</b></td><td>${esc(o.method || '')}<div class="tk-code">${esc(o.ref || '')}</div></td><td class="r nowrap"><button class="btn s ok" data-a="confirmOrder" data-id="${o.id}">Confirmer</button> <button class="btn s danger" data-a="rejectOrder" data-id="${o.id}">Rejeter</button></td></tr>`).join('')}</table></div><p class="xs mut">Vérifiez la référence sur votre compte Orange Money / MTN avant de confirmer : la confirmation émet les billets.</p>` : '<p class="mut sm">Aucun paiement en attente.</p>'}</div>
   <div class="card pad"><div class="row between"><h2>Mes événements</h2><a class="btn s" href="#/org/nouveau">+ Créer un événement</a></div>${ev.length ? `<div class="tw"><table><tr><th>Événement</th><th>Statut</th><th>Date</th><th class="n">Vendus</th><th class="n">Disponibles</th><th class="n">Recettes</th><th></th></tr>${ev.map(e => `<tr><td><a href="#/e/${e.id}"><b>${esc(e.name)}</b></a><div class="xs mut">${esc(e.category || '')} · ${esc(e.city || '')}</div></td><td>${badge(st(e))}</td><td class="sm nowrap">${dFmt(e.starts_at)}</td><td class="n">${num(e.sold)}</td><td class="n">${num(e.available)}</td><td class="n"><b>${money(e.revenue, e.currency)}</b></td><td class="r">${e.cancelled || ts(e.ends_at) < now ? '' : `<button class="btn s ghost" data-a="cancelEvent" data-id="${e.id}">Annuler</button>`}</td></tr>`).join('')}</table></div>` : '<p class="mut sm">Vous n\'avez pas encore d\'événement.</p>'}</div>
-  <div class="cols"><div class="card pad"><h2>Billets émis</h2>${D.tickets.length ? `<div class="tw"><table><tr><th>Code</th><th>Événement</th><th>Catégorie</th><th>Titulaire</th><th>Statut</th><th></th></tr>${D.tickets.map(k => `<tr><td class="tk-code">${esc(k.code)}</td><td>${esc(k.event)}</td><td>${esc(k.tier)}</td><td>${esc(k.holder || '')}</td><td>${badge(tkBadge(k.status))}</td><td class="r">${k.status === 'valide' ? `<button class="btn s ghost" data-a="refund" data-code="${esc(k.code)}">Rembourser</button>` : ''}</td></tr>`).join('')}</table></div><p class="xs mut">Un billet n'est jamais supprimé : le remboursement est une procédure tracée qui remet la place en stock.</p>` : '<p class="mut sm">Aucun billet émis pour le moment.</p>'}</div>
+  <div class="cols"><div class="card pad"><div class="row between"><h2>Billets émis</h2>${D.tickets.length ? '<button class="btn s ghost" data-a="csv">Exporter (Excel/CSV)</button>' : ''}</div>${D.tickets.length ? `<div class="tw"><table><tr><th>Code</th><th>Événement</th><th>Catégorie</th><th>Titulaire</th><th>Statut</th><th></th></tr>${D.tickets.map(k => `<tr><td class="tk-code">${esc(k.code)}</td><td>${esc(k.event)}</td><td>${esc(k.tier)}</td><td>${esc(k.holder || '')}</td><td>${badge(tkBadge(k.status))}</td><td class="r">${k.status === 'valide' ? `<button class="btn s ghost" data-a="refund" data-code="${esc(k.code)}">Rembourser</button>` : ''}</td></tr>`).join('')}</table></div><p class="xs mut">Un billet n'est jamais supprimé : le remboursement est une procédure tracée qui remet la place en stock.</p>` : '<p class="mut sm">Aucun billet émis pour le moment.</p>'}</div>
   <div class="card pad stack"><h2>Scanners</h2>${D.scanners.length ? D.scanners.map(s => `<div class="row between sm" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>${esc(s.name || s.email)}</b><br><span class="xs mut">${esc(s.email)}</span></span><span class="xs">${esc(s.event)}</span></div>`).join('') : '<p class="mut sm">Aucun scanner affecté.</p>'}
   ${ev.length ? `<form class="stack" data-f="scanner"><label class="f">E-mail du compte à affecter<input name="email" type="email" required></label><label class="f">Événement<select name="event">${ev.map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join('')}</select></label><button class="btn s">Affecter le scanner</button><p class="xs mut" style="margin:0">La personne doit d'abord créer son compte sur le site. Vous pouvez aussi scanner vous-même vos événements.</p></form>` : ''}</div></div></div>`;
 }
@@ -220,7 +237,9 @@ async function vNewEvent() {
   if (!ME) return needLogin(); if (role() !== 'organisateur') return denied();
   const D = await loadData(), tm = new Date(day0() + 7 * DAY), iso = `${tm.getFullYear()}-${String(tm.getMonth() + 1).padStart(2, '0')}-${String(tm.getDate()).padStart(2, '0')}`;
   return head('Créer un événement', 'Le nombre de places est obligatoire pour chaque catégorie de billets.') + `<div class="wrap sec"><form class="card pad stack" data-f="newEvent" style="max-width:820px"><div class="g2"><label class="f">Nom de l'événement<input name="name" required minlength="3"></label><label class="f">Catégorie<select name="category" required>${D.cats.filter(c => c.active).map(c => `<option>${esc(c.name)}</option>`).join('')}</select></label>
-  <label class="f">Pays<input name="country" required value="Guinée"></label><label class="f">Ville<input name="city" required value="Conakry"></label><label class="f">Lieu et adresse<input name="venue" required></label><label class="f">Slogan<input name="slogan"></label><label class="f">Date<input name="date" type="date" required value="${iso}"></label><div class="g2"><label class="f">Début<input name="time" type="time" required value="19:00"></label><label class="f">Durée (heures)<input name="dur" type="number" min="1" max="72" required value="5"></label></div></div>
+  <label class="f">Pays<select name="country">${D.countries.filter(c => c.active).map(c => `<option>${esc(c.name)}</option>`).join('')}</select></label><label class="f">Devise des billets<select name="currency">${D.currencies.filter(c => c.active).map(c => `<option value="${esc(c.code)}">${esc(c.code)} — ${esc(c.name)}</option>`).join('')}</select></label><label class="f">Ville<input name="city" required value="Conakry"></label><label class="f">Lieu et adresse<input name="venue" required></label><label class="f">Slogan<input name="slogan"></label><label class="f">Date<input name="date" type="date" required value="${iso}"></label><div class="g2"><label class="f">Début<input name="time" type="time" required value="19:00"></label><label class="f">Durée (heures)<input name="dur" type="number" min="1" max="72" required value="5"></label></div></div>
+  <details><summary class="sm" style="cursor:pointer;font-weight:650;color:var(--o-d)">Événement sur plusieurs dates ? Ajouter jusqu'à deux autres dates</summary><div class="g2" style="margin-top:12px">${[1, 2].map(i => `<label class="f">Date ${i + 1}<input name="date${i}" type="date"></label><label class="f">Début<input name="time${i}" type="time" value="19:00"></label>`).join('')}</div><p class="xs mut" style="margin:8px 0 0">Chaque date reçoit les mêmes catégories de billets, avec son propre stock de places.</p></details>
+  <label class="f">Affiche de l'événement (image JPG, PNG ou WebP, 3 Mo maximum)<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
   <label class="f">Description<textarea name="description" rows="3" required></textarea></label>
   <div class="g2"><label class="f">Public concerné<select name="audience"><option>Tout public</option><option>Enfant</option><option>Adolescent</option><option>Jeune</option><option>Adulte</option><option>Famille</option></select></label><label class="f">Mots-clés (séparés par des virgules)<input name="keywords" placeholder="KIF, LOVE, AFRICA"></label></div>
   <label class="f">Conditions d'accès<input name="access" placeholder="Ex. pièce d'identité exigée, ouverture des portes à 17 h"></label>
@@ -259,9 +278,10 @@ async function camStart() {
 /* ---------- Direction ---------- */
 async function vAdmin(tab = 'vue') {
   if (!ME) return needLogin(); if (role() !== 'admin') return denied();
-  const D = await rpc('admin_overview'), tabs = [['vue', 'Vue d\'ensemble'], ['comptes', 'Comptes'], ['evenements', 'Événements'], ['categories', 'Catégories'], ['journal', 'Journal d\'audit']];
+  const D = await rpc('admin_overview'), tabs = [['vue', 'Vue d\'ensemble'], ['comptes', 'Comptes'], ['evenements', 'Événements'], ...ADMIN_TABS, ['categories', 'Catégories'], ['journal', 'Journal d\'audit']];
   let body;
-  if (tab === 'comptes') body = `<div class="card pad"><div class="tw"><table><tr><th>Compte</th><th>Organisation</th><th>Rôle</th><th>Statut</th><th></th></tr>${D.user_list.map(u => `<tr><td><b>${esc(u.full_name || '—')}</b><div class="xs mut">${esc(u.email)} · ${esc(u.phone || '')}</div></td><td>${esc(u.org_name || '')} ${u.org_requested ? badge(['Demande organisateur', 'blue']) : ''}</td><td><select class="in" style="margin:0;width:auto" id="role-${u.id}" ${u.id === ME.id ? 'disabled' : ''}>${Object.entries(ROLE_L).map(([k, l]) => `<option value="${k}" ${u.role === k ? 'selected' : ''}>${l}</option>`).join('')}</select></td><td>${badge(u.status === 'actif' ? ['Actif', 'green'] : ['Suspendu', 'red'])}</td><td class="r nowrap">${u.id === ME.id ? '<span class="xs mut">Vous</span>' : `<button class="btn s" data-a="setRole" data-id="${u.id}" data-status="${u.status}">Enregistrer le rôle</button> <button class="btn s ${u.status === 'actif' ? 'danger' : 'ok'}" data-a="setStatus" data-id="${u.id}" data-role="${u.role}" data-status="${u.status === 'actif' ? 'suspendu' : 'actif'}">${u.status === 'actif' ? 'Suspendre' : 'Réactiver'}</button>`}</td></tr>`).join('')}</table></div><p class="xs mut" style="margin-top:10px">Suspendre un organisateur masque immédiatement ses événements. Chaque action exige un motif et est journalisée.</p></div>`;
+  if (ADMIN_R[tab]) body = await ADMIN_R[tab](D);
+  else if (tab === 'comptes') body = `<div class="card pad"><div class="tw"><table><tr><th>Compte</th><th>Organisation</th><th>Rôle</th><th>Statut</th><th></th></tr>${D.user_list.map(u => `<tr><td><b>${esc(u.full_name || '—')}</b><div class="xs mut">${esc(u.email)} · ${esc(u.phone || '')}</div></td><td>${esc(u.org_name || '')} ${u.org_requested ? badge(['Demande organisateur', 'blue']) : ''}</td><td><select class="in" style="margin:0;width:auto" id="role-${u.id}" ${u.id === ME.id ? 'disabled' : ''}>${Object.entries(ROLE_L).map(([k, l]) => `<option value="${k}" ${u.role === k ? 'selected' : ''}>${l}</option>`).join('')}</select></td><td>${badge(u.status === 'actif' ? ['Actif', 'green'] : ['Suspendu', 'red'])}</td><td class="r nowrap">${u.id === ME.id ? '<span class="xs mut">Vous</span>' : `<button class="btn s" data-a="setRole" data-id="${u.id}" data-status="${u.status}">Enregistrer le rôle</button> <button class="btn s ${u.status === 'actif' ? 'danger' : 'ok'}" data-a="setStatus" data-id="${u.id}" data-role="${u.role}" data-status="${u.status === 'actif' ? 'suspendu' : 'actif'}">${u.status === 'actif' ? 'Suspendre' : 'Réactiver'}</button>`}</td></tr>`).join('')}</table></div><p class="xs mut" style="margin-top:10px">Suspendre un organisateur masque immédiatement ses événements. Chaque action exige un motif et est journalisée.</p></div>`;
   else if (tab === 'evenements') body = `<div class="card pad">${D.event_list.length ? `<div class="tw"><table><tr><th>Événement</th><th>Organisateur</th><th>Date</th><th class="n">Billets vendus</th><th>Statut</th><th></th></tr>${D.event_list.map(e => `<tr><td><a href="#/e/${e.id}"><b>${esc(e.name)}</b></a><div class="xs mut">${esc(e.city || '')}</div></td><td>${esc(e.org_name || '')}</td><td class="sm nowrap">${e.starts_at ? dFmt(e.starts_at) : '—'}</td><td class="n">${num(e.sold)}</td><td>${badge(e.cancelled ? ['Annulé', 'gray'] : ['Publié', 'green'])}</td><td class="r">${e.cancelled ? '' : `<button class="btn s danger" data-a="cancelEvent" data-id="${e.id}">Annuler</button>`}</td></tr>`).join('')}</table></div>` : '<p class="mut sm">Aucun événement.</p>'}</div>`;
   else if (tab === 'categories') { const C = (await loadData(true)).cats; body = `<div class="card pad"><div class="tw"><table><tr><th>Ordre</th><th>Catégorie</th><th>Statut</th><th></th></tr>${C.map(c => `<tr><td>${c.position}</td><td><b>${esc(c.name)}</b></td><td>${badge(c.active ? ['Active', 'green'] : ['Inactive', 'gray'])}</td><td class="r"><button class="btn s ghost" data-a="toggleCat" data-id="${c.id}" data-on="${c.active ? 0 : 1}">${c.active ? 'Désactiver' : 'Activer'}</button></td></tr>`).join('')}</table></div><form class="row" data-f="cat" data-pos="${C.length + 1}" style="margin-top:14px"><input class="in" style="flex:1;margin:0" name="name" required minlength="2" placeholder="Nouvelle catégorie"><button class="btn s">Ajouter</button></form></div>`; }
   else if (tab === 'journal') body = `<div class="card pad">${D.audit.length ? `<div class="tw"><table><tr><th>Date et heure</th><th>Auteur</th><th>Action</th><th>Motif</th></tr>${D.audit.map(a => `<tr><td class="nowrap sm">${dtFmt(a.at)}</td><td class="sm">${esc(a.actor || 'Système')}</td><td>${esc(a.action)}</td><td class="sm mut">${esc(a.reason || '')}</td></tr>`).join('')}</table></div>` : '<p class="mut sm">Aucune opération enregistrée.</p>'}</div>`;
@@ -272,12 +292,14 @@ async function vAdmin(tab = 'vue') {
 
 /* ---------- routeur ---------- */
 function nav(p, h) {
-  const l = [['#/', 'Événements', 'Événements', 'cal'], ['#/billets', 'Mes billets', 'Billets', 'ticket']];
+  const staff = role() && role() !== 'participant' ? 'd-only' : '';
+  const l = [['#/', 'Événements', 'Événements', 'cal', '', ['', 'e']], ['#/votes', 'Votes', 'Votes', 'vote', staff, ['votes', 'vote']], ['#/cagnottes', 'Cagnottes', 'Cagnottes', 'heart', staff, ['cagnottes', 'cagnotte', 'paiement']], ['#/inscriptions', 'Inscriptions', 'Inscriptions', 'form', 'd-only', ['inscriptions', 'inscription']], ['#/billets', 'Mes billets', 'Billets', 'ticket', '', ['billets', 'commande']]];
+  if (role() === 'vendeur') l.push(['#/vente', 'Vente au guichet', 'Vente', 'cash']);
   if (role() === 'organisateur') l.push(['#/org', 'Espace organisateur', 'Espace', 'grid']);
   if (['organisateur', 'scanner', 'admin'].includes(role())) l.push(['#/scan', 'Scanner', 'Scanner', 'cam']);
   if (role() === 'admin') l.push(['#/admin', 'Administration', 'Admin', 'shield']);
   l.push(ME ? ['#/compte', 'Mon compte', 'Compte', 'user', 'm-only'] : ['#/connexion', 'Connexion', 'Connexion', 'user', 'm-only']);
-  $('#nav').innerHTML = l.map(([u, t, s, i, c]) => `<a href="${u}" class="${c || ''} ${(u === '#/' ? ['', 'e'].includes(p[0]) : u === '#/billets' ? ['billets', 'commande'].includes(p[0]) : h.startsWith(u)) ? 'on' : ''}">${ic(i)}<span class="n-full">${t}</span><span class="n-short">${s}</span></a>`).join('');
+  $('#nav').innerHTML = l.map(([u, t, s, i, c, m]) => `<a href="${u}" class="${c || ''} ${(m ? m.includes(p[0]) : h.startsWith(u)) ? 'on' : ''}">${ic(i)}<span class="n-full">${t}</span><span class="n-short">${s}</span></a>`).join('');
   $('#auth').innerHTML = ME ? `<a class="btn s ghost" href="#/compte">${ic('user')} ${esc((ME.full_name || ME.email || '').split(' ')[0])}</a>` : `<a class="btn s" href="#/connexion">Connexion</a>`;
 }
 async function render() {
@@ -286,7 +308,8 @@ async function render() {
   vOrder.poll = null;
   if (!READY) { $('#nav').innerHTML = ''; app.innerHTML = box('Configuration requise', '<p>Renseignez l\'adresse du projet Supabase et la clé publique dans le fichier <b>config.js</b>, puis rechargez la page.</p>'); return; }
   nav(p, h);
-  const views = { '': vHome, e: () => vEvent(p[1]), commande: () => vOrder(p[1]), billets: vTickets, connexion: vAuth, compte: vAccount, org: () => p[1] === 'nouveau' ? vNewEvent() : vOrg(), scan: vScan, admin: () => vAdmin(p[1]) };
+  const views = { '': vHome, e: () => vEvent(p[1]), commande: () => vOrder(p[1]), billets: vTickets, connexion: vAuth, compte: vAccount, org: () => p[1] === 'nouveau' ? vNewEvent() : vOrg(p[1]), scan: vScan, admin: () => vAdmin(p[1]) };
+  for (const k in VIEWS) views[k] = () => VIEWS[k](p);
   if (!app.dataset.v || app.dataset.v !== h) app.innerHTML = '<div class="wrap sec"><div class="empty">Chargement…</div></div>';
   let html;
   try { html = await (views[p[0]] || vNotFound)(); } catch (e) { html = box('Une erreur est survenue', `<p class="mut">${esc(e.message || '')}</p><button class="btn" data-a="refresh">Réessayer</button>`); }
@@ -347,11 +370,21 @@ const F = {
   async scanner(f) { await rpc('assign_scanner', { p_email: f.get('email'), p_event: f.get('event') }); toast('Scanner affecté.'); await render(); },
   async cat(f, form) { const { error } = await sb.from('categories').insert({ name: f.get('name').trim(), position: +form.dataset.pos }); if (error) throw new Error(error.message); DATA = null; await render(); },
   async newEvent(f) {
+    const dur = +f.get('dur') * 36e5, mk = (d, t) => { const s = new Date(d + 'T' + t); return { starts_at: s.toISOString(), ends_at: new Date(+s + dur).toISOString() }; };
+    const dates = [mk(f.get('date'), f.get('time'))]; for (const i of [1, 2]) if (f.get('date' + i)) dates.push(mk(f.get('date' + i), f.get('time' + i) || '19:00'));
+    let image_url = null; const file = f.get('image');
+    if (file && file.size) {
+      if (file.size > 3 * 1024 * 1024) throw new Error('L\'affiche dépasse 3 Mo.');
+      const path = ME.id + '/' + Date.now() + '.' + ({ 'image/png': 'png', 'image/webp': 'webp' }[file.type] || 'jpg');
+      const up = await sb.storage.from('affiches').upload(path, file, { contentType: file.type });
+      if (up.error) throw new Error('Envoi de l\'affiche impossible : ' + up.error.message);
+      image_url = sb.storage.from('affiches').getPublicUrl(path).data.publicUrl;
+    }
     const start = new Date(f.get('date') + 'T' + f.get('time')), tiers = [], pal = [['#FF8A1F', '#C2185B'], ['#F59E0B', '#D4500A'], ['#EA580C', '#7C2D12'], ['#B45309', '#E11D48'], ['#FB923C', '#9A3412'], ['#F97316', '#4C1D95']];
     for (let i = 0; i < 3; i++) { const n = f.get('tn' + i).trim(), q = +f.get('tq' + i); if (n && q > 0) tiers.push({ name: n, price: +f.get('tp' + i) || 0, quota: q }); }
     if (!tiers.length) throw new Error('Ajoutez au moins une catégorie avec un nombre de places.');
     const c = pal[Math.floor(Math.random() * pal.length)];
-    const id = await rpc('create_event', { p: { name: f.get('name'), slogan: f.get('slogan').trim(), description: f.get('description').trim(), category: f.get('category'), country: f.get('country').trim(), city: f.get('city').trim(), venue: f.get('venue').trim(), audience: f.get('audience'), access: f.get('access').trim(), payment_info: f.get('payment_info').trim(), keywords: f.get('keywords').split(',').map(s => s.trim()).filter(Boolean), artists: f.get('artists').split('\n').map(l => l.split(/\s+[—-]\s+/)).filter(a => a[0].trim()).map(a => ({ name: a[0].trim(), role: (a[1] || 'Invité').trim() })), color1: c[0], color2: c[1], starts_at: start.toISOString(), ends_at: new Date(+start + +f.get('dur') * 36e5).toISOString(), tiers } });
+    const id = await rpc('create_event', { p: { name: f.get('name'), slogan: f.get('slogan').trim(), description: f.get('description').trim(), category: f.get('category'), country: f.get('country').trim(), city: f.get('city').trim(), venue: f.get('venue').trim(), audience: f.get('audience'), access: f.get('access').trim(), payment_info: f.get('payment_info').trim(), keywords: f.get('keywords').split(',').map(s => s.trim()).filter(Boolean), artists: f.get('artists').split('\n').map(l => l.split(/\s+[—-]\s+/)).filter(a => a[0].trim()).map(a => ({ name: a[0].trim(), role: (a[1] || 'Invité').trim() })), color1: c[0], color2: c[1], starts_at: start.toISOString(), ends_at: new Date(+start + dur).toISOString(), dates, currency: f.get('currency') || 'GNF', image_url, tiers } });
     DATA = null; toast('Événement publié.'); location.hash = '#/e/' + id;
   },
 };
@@ -372,7 +405,11 @@ document.addEventListener('scroll', ctaSync, { passive: true, capture: true });
 setInterval(ctaSync, 500);
 setInterval(tick, 1000);
 setInterval(() => { if (vOrder.poll && !document.hidden) render(); }, 15000);
-(async () => {
-  if (READY) { try { await loadMe(); } catch (e) { ME = null; } sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') { ME = null; render(); } }); }
+const VIEWS = {}; // pages ajoutées par modules.js
+async function boot() {
+  if (READY) { try { await loadMe(); } catch (e) { ME = null; } sb.auth.onAuthStateChange((ev) => {
+    if (ev === 'SIGNED_OUT') { ME = null; render(); }
+    if (ev === 'PASSWORD_RECOVERY') modal(`<h2>Nouveau mot de passe</h2><form data-f="newPassword" class="stack"><label class="f">Choisissez un nouveau mot de passe<input name="password" type="password" required minlength="8" autocomplete="new-password"></label><button class="btn">Enregistrer</button></form>`);
+  }); }
   render();
-})();
+}

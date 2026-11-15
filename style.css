@@ -55,11 +55,11 @@ label.f>input:focus,label.f>select:focus,label.f>textarea:focus,.in:focus{border
 .eyebrow{display:inline-block;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);padding:5px 12px;border-radius:999px;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
 .search{margin-top:22px;background:#fff;border-radius:18px;padding:8px;display:flex;gap:8px;max-width:720px;box-shadow:0 20px 40px -20px rgba(90,35,0,.6)}
 .search input{flex:1;border:0;font:inherit;padding:12px 14px;border-radius:12px;min-width:0;color:var(--ink)} .search input:focus{outline:0}
-.services{margin-top:-42px;position:relative;z-index:2;display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.services{margin-top:-42px;position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .svc{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 12px;text-align:center;box-shadow:var(--sh);color:var(--ink);font-weight:700;font-size:.9rem;transition:.15s}
 .svc:hover{transform:translateY(-3px);border-color:var(--o-200)} .svc i{display:block;font-style:normal;font-size:1.6rem;margin-bottom:4px}
 .svc small{display:block;font-weight:500;color:var(--mut);font-size:.74rem}
-@media(max-width:860px){.services{grid-template-columns:repeat(3,1fr)}}
+
 
 /* Logo */
 .logo-img{height:44px;width:auto;display:block;mix-blend-mode:multiply;filter:brightness(1.04) contrast(1.06)}
@@ -253,3 +253,17 @@ dialog::backdrop{background:rgba(34,21,13,.55);backdrop-filter:blur(3px)}
 }
 @media(max-width:380px){.hero h1{font-size:1.5rem}.kpis{grid-template-columns:1fr}}
 @media print{.nav,.m-cta{display:none!important}}
+/* ---------- Modules v2 ---------- */
+.poster.img:before{display:none}
+.poster.img .badge{box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.cand{flex-wrap:wrap}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--o)}
+input[type=file]{padding:8px!important}
+details>summary{list-style-position:inside}
+@media(max-width:720px){
+  .nav a.d-only{display:none}
+  .services{grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+  .svc{padding:10px 4px;font-size:.72rem;border-radius:12px} .svc small{display:none}
+  .svc i{width:38px;height:38px;margin-bottom:5px;font-size:1.15rem}
+  .cand{gap:10px;padding:12px}
+}
