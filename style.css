@@ -267,3 +267,27 @@ details>summary{list-style-position:inside}
   .svc i{width:38px;height:38px;margin-bottom:5px;font-size:1.15rem}
   .cand{gap:10px;padding:12px}
 }
+/* ---------- Rôles et administration (v4) ---------- */
+.top-in{position:relative}
+.bell{position:relative;display:inline-grid;place-items:center;width:40px;height:40px;border-radius:12px;color:var(--ink);border:1.5px solid var(--line);background:#fff;flex:none}
+.bell[hidden]{display:none}
+.bell .ic{width:20px;height:20px}
+.bell span{position:absolute;top:-6px;right:-6px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--red);color:#fff;font-size:.68rem;font-weight:800;display:grid;place-items:center}
+.bell span:empty{display:none}
+.alerts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px}
+.alert{display:flex;gap:12px;align-items:center;padding:14px 16px;border-radius:14px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--o);color:var(--ink);box-shadow:var(--sh)}
+.alert b{font-size:1.5rem;color:var(--o-d);min-width:28px}
+.alert.zero{border-left-color:var(--line);opacity:.65;box-shadow:none}
+.chart{display:flex;align-items:flex-end;gap:3px;height:190px;margin-top:16px;border-bottom:1px solid var(--line)}
+.chart i{flex:1;background:var(--o);border-radius:4px 4px 0 0;min-height:2px;opacity:.85}
+.chart i:hover{opacity:1;background:var(--o-d)}
+.chart-x{display:flex;justify-content:space-between;font-size:.72rem;color:var(--mut);margin-top:6px}
+.msg{padding:10px 12px;border-radius:12px;background:var(--gray-bg);max-width:88%}
+.msg.staff{background:var(--o-50);border:1px solid var(--o-100);margin-left:auto}
+.notif{display:block;padding:12px 0;border-bottom:1px solid var(--line);color:inherit}
+.notif.unread b:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--o);margin-right:8px;vertical-align:middle}
+.artist{align-items:flex-start}
+img.av{object-fit:cover;background:var(--o-100)}
+.artist-row{border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;background:var(--o-50)}
+tr[hidden]{display:none}
+@media(max-width:720px){.bell{position:absolute;right:16px;top:8px}.alerts{grid-template-columns:1fr 1fr}.chart{height:140px;gap:2px}}
