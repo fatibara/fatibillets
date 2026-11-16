@@ -319,3 +319,11 @@ tr[hidden]{display:none}
 .vote-head{min-height:220px;display:flex;align-items:flex-end;padding:28px 0}
 .vote-head .wrap{width:100%;position:relative}
 .vote-head .p-name{display:block}
+/* ---------- Impression, statistiques, réglages du site (v6) ---------- */
+.pd-preview{overflow:auto;background:repeating-conic-gradient(#f3ece6 0 25%,#fff 0 50%) 0 0/16px 16px;border-radius:12px;padding:14px}
+.print-tk{font-family:"Segoe UI",system-ui,sans-serif;line-height:1.2}
+.print-tk svg{shape-rendering:crispEdges}
+.print-sheet{display:flex;flex-wrap:wrap;gap:3mm;align-items:flex-start}
+.print-sheet .print-tk{break-inside:avoid;page-break-inside:avoid}
+.feat-list{max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:8px 12px;display:grid;gap:6px}
+@media print{dialog .dlg{padding:0}.print-sheet{gap:2mm}}

@@ -297,5 +297,4 @@ Object.assign(F, {
   async page(f, form) { await rpc2('save_page', { p_slug: form.dataset.slug, p_title: f.get('title'), p_body: f.get('body'), p_reason: f.get('reason') }); toast('Page publiée.'); await render(); },
   async help(f, form) { const id = await rpc2('save_help_article', { p: { id: form.dataset.id || null, audience: f.get('audience'), position: f.get('position'), title: f.get('title'), body: f.get('body'), published: !!f.get('published') } }); UI.helpEdit = id; toast('Article enregistré.'); await render(); },
 });
-
-boot();
+// boot() est appelé à la fin de modules4.js, chargé après ce fichier.
