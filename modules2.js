@@ -201,4 +201,4 @@ Object.assign(I, {
 });
 
 if ($('#bell')) $('#bell').innerHTML = ic('bell') + '<span id="bellN"></span>';
-boot();
+// boot() est appelé à la fin de modules3.js, chargé après ce fichier.

@@ -291,3 +291,31 @@ img.av{object-fit:cover;background:var(--o-100)}
 .artist-row{border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;background:var(--o-50)}
 tr[hidden]{display:none}
 @media(max-width:720px){.bell{position:absolute;right:16px;top:8px}.alerts{grid-template-columns:1fr 1fr}.chart{height:140px;gap:2px}}
+/* Onglets de l'administration : toujours tous visibles, sur plusieurs lignes si besoin */
+.tabs.admin-tabs{flex-wrap:wrap;overflow:visible}
+@media(max-width:720px){.tabs.admin-tabs{margin:0 0 16px;padding:0;gap:4px;border:0}.tabs.admin-tabs a{border:1.5px solid var(--line);border-radius:999px;margin:0;padding:7px 12px;font-size:.82rem}.tabs.admin-tabs a.on{background:var(--o);border-color:var(--o);color:#fff}}
+
+/* ---------- Reprise de la plateforme actuelle (v5) ---------- */
+.foot-links{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.foot-links a{color:var(--mut);font-weight:600} .foot-links a:hover{color:var(--o-d)}
+.adv{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 14px}
+.adv>summary{cursor:pointer;font-weight:700;color:var(--o-d)}
+.adv-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:10px}
+.card.adv-in{margin-top:0}
+.ev-actions{gap:8px}
+.review{padding:10px 0;border-bottom:1px solid var(--line)}
+.stars{color:#F59E0B;letter-spacing:1px}
+.rate{display:inline-flex;flex-direction:row-reverse;justify-content:flex-end;gap:2px}
+.rate input{position:absolute;opacity:0;width:1px;height:1px}
+.rate label{font-size:1.8rem;color:#D9CFC7;cursor:pointer;line-height:1}
+.rate input:checked~label,.rate label:hover,.rate label:hover~label{color:#F59E0B}
+.rate input:focus-visible+label{outline:3px solid var(--o-l);border-radius:4px}
+.prose p{margin:0 0 1em;line-height:1.7}
+.faq{border-bottom:1px solid var(--line);padding:10px 0}
+.faq>summary{cursor:pointer;font-weight:700}
+.faq>div{margin-top:8px}
+.tier-edit{border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0;display:grid;gap:8px;background:#fff}
+.tier-add{margin:6px 0 14px}
+.vote-head{min-height:220px;display:flex;align-items:flex-end;padding:28px 0}
+.vote-head .wrap{width:100%;position:relative}
+.vote-head .p-name{display:block}

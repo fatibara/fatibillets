@@ -2,7 +2,7 @@
 /* FatiBillets — modules : votes, cagnottes, inscriptions, vente au guichet, finances, pays et devises.
    Chargé après app.js ; nécessite la base v2 (supabase/schema_v2.sql). */
 
-const q = async p => { const r = await p; if (r.error) throw new Error(/schema cache|does not exist/i.test(r.error.message) ? 'Ce module n\'est pas encore activé : la mise à jour de la base (schema_v2.sql) doit être exécutée dans Supabase.' : r.error.message); return r.data; };
+const q = async p => { const r = await p; if (r.error) throw new Error(/schema cache|does not exist/i.test(r.error.message) ? 'Ce module n\'est pas encore activé : la dernière mise à jour de la base de données doit être exécutée dans Supabase.' : r.error.message); return r.data; };
 const rpc2 = (n, a) => q(sb.rpc(n, a));
 const grad = x => `background:linear-gradient(135deg,${esc(x.color1)},${esc(x.color2)})`;
 const cStatus = c => c.suspended ? ['Suspendu', 'red'] : Date.now() < ts(c.starts_at) ? ['À venir', 'blue'] : Date.now() > ts(c.ends_at) ? ['Clôturé', 'gray'] : ['Ouvert', 'green'];

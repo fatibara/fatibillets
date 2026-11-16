@@ -71,10 +71,10 @@ async function loadData(force) {
   // Paramètres de la Direction (facultatifs tant que la base v3 n'est pas installée).
   const st = await sb.from('settings').select('key, value');
   const SET = Object.fromEntries((st.error ? [] : st.data).map(x => [x.key, x.value]));
-  RATE = typeof SET.commission_rate === 'number' ? SET.commission_rate : null;
+  RATE = typeof SET.commission_tickets_online === 'number' ? SET.commission_tickets_online : typeof SET.commission_rate === 'number' ? SET.commission_rate : null;
   const A = Object.fromEntries(av.data.map(a => [a.tier_id, a.available]));
   const events = ev.data.map(e => ({ ...e, colors: [e.color1, e.color2], keywords: e.keywords || [], artists: e.artists || [],
-    dates: (e.event_dates || []).map(d => ({ id: d.id, start: ts(d.starts_at), end: ts(d.ends_at), tiers: (d.tiers || []).sort((a, b) => a.position - b.position).map(t => ({ ...t, avail: A[t.id] ?? 0 })) })).sort((a, b) => a.start - b.start) })).filter(e => e.dates.length);
+    dates: (e.event_dates || []).map(d => ({ id: d.id, start: ts(d.starts_at), end: ts(d.ends_at), tiers: (d.tiers || []).sort((a, b) => a.position - b.position).map(t => { const now = Date.now(), s = t.sales_start && ts(t.sales_start), en = t.sales_end && ts(t.sales_end); return { ...t, avail: A[t.id] ?? 0, onsale: !(s && now < s) && !(en && now > en), note: s && now < s ? 'Vente à partir du ' + dFmt(s) + ' à ' + hFmt(s) : en && now > en ? 'Vente terminée pour cette catégorie' : '' }; }) })).sort((a, b) => a.start - b.start) })).filter(e => e.dates.length);
   return DATA = { at: Date.now(), events, cats: cats.data, countries, currencies, settings: SET };
 }
 async function loadMe() {
@@ -158,7 +158,7 @@ async function vEvent(id) {
   let dId = UI.selDate[id]; if (!up.some(d => d.id === dId)) dId = UI.selDate[id] = up[0]?.id;
   const d = ev.dates.find(x => x.id === dId), sel = UI.sel[dId] || (UI.sel[dId] = {}), closed = st[0] === 'Terminé' || st[0] === 'Annulé';
   let total = 0, count = 0;
-  const tiers = d ? d.tiers.map(t => { const a = t.avail; if ((sel[t.id] || 0) > a) sel[t.id] = a; const q = sel[t.id] || 0; total += q * t.price; count += q; return `<div class="tier ${a === 0 ? 'out' : ''}"><div class="t-i"><b>${esc(t.name)}</b><div class="sm" style="color:var(--o-d);font-weight:700">${fmt(t.price, cur)}</div><div class="xs ${a === 0 ? '' : 'mut'}" ${a === 0 ? 'style="color:var(--red);font-weight:800"' : ''}>${a === 0 ? 'SOLD OUT — PLACES ÉPUISÉES' : a <= 10 ? `Plus que ${a} place${a > 1 ? 's' : ''} !` : num(a) + ' places disponibles'}</div></div>${a > 0 && !closed ? `<div class="step"><button data-a="qty" data-t="${t.id}" data-d="-1" ${q === 0 ? 'disabled' : ''} aria-label="Moins">−</button><span>${q}</span><button data-a="qty" data-t="${t.id}" data-d="1" ${q >= Math.min(a, 10) ? 'disabled' : ''} aria-label="Plus">+</button></div>` : ''}</div>`; }).join('') : '';
+  const tiers = d ? d.tiers.map(t => { const a = t.onsale === false ? 0 : t.avail; if ((sel[t.id] || 0) > a) sel[t.id] = a; const q = sel[t.id] || 0; total += q * t.price; count += q; return `<div class="tier ${a === 0 ? 'out' : ''}"><div class="t-i"><b>${esc(t.name)}</b>${t.description ? `<div class="xs mut">${esc(t.description)}</div>` : ''}<div class="sm" style="color:var(--o-d);font-weight:700">${fmt(t.price, cur)}</div><div class="xs ${a === 0 ? '' : 'mut'}" ${a === 0 ? 'style="color:var(--red);font-weight:800"' : ''}>${t.note ? esc(t.note) : a === 0 ? 'SOLD OUT — PLACES ÉPUISÉES' : a <= 10 ? `Plus que ${a} place${a > 1 ? 's' : ''} !` : num(a) + ' places disponibles'}</div></div>${a > 0 && !closed ? `<div class="step"><button data-a="qty" data-t="${t.id}" data-d="-1" ${q === 0 ? 'disabled' : ''} aria-label="Moins">−</button><span>${q}</span><button data-a="qty" data-t="${t.id}" data-d="1" ${q >= Math.min(a, t.max_per_order || 10) ? 'disabled' : ''} aria-label="Plus">+</button></div>` : ''}</div>`; }).join('') : '';
   const A = ev.artists;
   return `<div class="wrap sec"><p class="sm"><a href="#/">← Tous les événements</a></p><div class="cols"><div class="stack">${poster(ev, true)}
   <div><h2>${esc(ev.slogan || ev.name)}</h2><p>${esc(ev.description || '')}</p><div class="chips">${ev.keywords.map(k => `<span class="badge b-orange">#${esc(k)}</span>`).join(' ')}</div></div>
@@ -221,8 +221,8 @@ function vAuth() {
 }
 const ROLE_L = { participant: 'Participant', organisateur: 'Organisateur', scanner: 'Scanner', vendeur: 'Vendeur', admin_secondaire: 'Administrateur secondaire', admin: 'Administrateur général' };
 // Rubriques de l'administration et permission requise pour chacune ('__admin' = administrateur général uniquement).
-const PERM_L = { comptes: 'Comptes et rôles', evenements: 'Événements', transactions: 'Transactions', paiements: 'Paiements et retraits', activites: 'Votes, cagnottes, inscriptions', referentiels: 'Catégories, pays, devises', reclamations: 'Réclamations', assistance: 'Assistance aux organisateurs', journal: 'Journal d\'audit' };
-const TAB_PERM = { comptes: 'comptes', evenements: 'evenements', categories: 'referentiels', journal: 'journal', transactions: 'transactions', paiements: 'paiements', activites: 'activites', pays: 'referentiels', reclamations: 'reclamations', assist: 'assistance', parametres: '__admin' };
+const PERM_L = { comptes: 'Comptes et rôles', evenements: 'Événements', transactions: 'Transactions', paiements: 'Paiements et retraits', activites: 'Votes, cagnottes, inscriptions', referentiels: 'Catégories, pays, devises', reclamations: 'Réclamations', assistance: 'Assistance aux organisateurs', journal: 'Journal d\'audit', contenus: 'Pages et centre d\'aide' };
+const TAB_PERM = { comptes: 'comptes', evenements: 'evenements', categories: 'referentiels', journal: 'journal', transactions: 'transactions', paiements: 'paiements', activites: 'activites', pays: 'referentiels', reclamations: 'reclamations', assist: 'assistance', parametres: '__admin', lieux: 'referentiels', avis: 'evenements', contenus: 'contenus' };
 const isStaff = () => ['admin', 'admin_secondaire'].includes(role());
 const can = (perm, me) => !perm || me.role === 'admin' || (perm !== '__admin' && (me.permissions || []).includes(perm));
 function vAccount() {
@@ -297,7 +297,8 @@ async function camStart() {
 async function vAdmin(tab = 'vue') {
   if (!ME) return needLogin(); if (!isStaff()) return denied();
   const D = await rpc('admin_overview'), me = D.me || { role: role(), permissions: ME.permissions || [] };
-  const tabs = [['vue', 'Vue d\'ensemble'], ['comptes', 'Comptes et rôles'], ['evenements', 'Événements'], ...ADMIN_TABS, ['categories', 'Catégories'], ['journal', 'Journal d\'audit']].filter(([k]) => can(TAB_PERM[k], me));
+  const extra = ADMIN_TABS.filter(([k]) => k !== 'parametres');
+  const tabs = [['vue', 'Vue d\'ensemble'], ['parametres', '⚙ Paramètres'], ['comptes', 'Comptes et rôles'], ['evenements', 'Événements'], ...extra, ['categories', 'Catégories'], ['journal', 'Journal d\'audit']].filter(([k]) => can(TAB_PERM[k], me));
   if (!can(TAB_PERM[tab], me)) return head('Direction FATIGLOBAL', '') + box('Accès refusé', '<p>Votre compte administrateur n\'a pas la permission d\'ouvrir cette rubrique.</p><a class="btn" href="#/admin">Retour</a>');
   let body;
   if (ADMIN_R[tab]) body = await ADMIN_R[tab](D, me);
@@ -307,13 +308,13 @@ async function vAdmin(tab = 'vue') {
   else if (tab === 'journal') body = `<div class="card pad">${D.audit.length ? `<div class="tw"><table><tr><th>Date et heure</th><th>Auteur</th><th>Action</th><th>Motif</th></tr>${D.audit.map(a => `<tr><td class="nowrap sm">${dtFmt(a.at)}</td><td class="sm">${esc(a.actor || 'Système')}</td><td>${esc(a.action)}</td><td class="sm mut">${esc(a.reason || '')}</td></tr>`).join('')}</table></div>` : '<p class="mut sm">Aucune opération enregistrée.</p>'}</div>`;
   else body = `<div class="kpis">${D.revenue.map(r => `<div class="kpi hot"><small>Ventes (${esc(r.currency)})</small><b>${money(r.amount, r.currency)}</b></div><div class="kpi hot"><small>Commissions, ${commLabel()} (${esc(r.currency)})</small><b>${commValue(r.amount, r.currency)}</b></div>`).join('')}<div class="kpi"><small>Comptes</small><b>${num(D.users)}</b></div><div class="kpi"><small>Organisateurs</small><b>${num(D.organizers)}</b></div><div class="kpi"><small>Événements</small><b>${num(D.events)}</b></div><div class="kpi"><small>Billets vendus</small><b>${num(D.tickets)}</b></div><div class="kpi"><small>Paiements à vérifier</small><b>${num(D.pending)}</b></div><div class="kpi"><small>Demandes organisateur</small><b>${D.user_list.filter(u => u.org_requested).length}</b></div></div>
   ${(D.refunds || []).length ? `<div class="card pad" style="margin-top:22px"><h2>Paiements à rembourser</h2><div class="tw"><table><tr><th>Acheteur</th><th>Événement</th><th class="n">Montant</th><th>Réf. LengoPay</th></tr>${D.refunds.map(r => `<tr><td><b>${esc(r.name)}</b><div class="xs mut">${esc(r.phone)} · ${dtFmt(r.created_at)}</div></td><td>${esc(r.event)}</td><td class="n"><b>${money(r.total, r.currency)}</b></td><td class="tk-code">${esc(r.pay_id || '')}</td></tr>`).join('')}</table></div><p class="xs mut">Paiements reçus après l'expiration de la réservation, sans place disponible. Le remboursement se fait depuis votre compte LengoPay.</p></div>` : ''}`;
-  return head('Direction FATIGLOBAL', me.role === 'admin' ? 'Administration générale — supervision de toute la plateforme.' : 'Administrateur secondaire — accès : ' + ((me.permissions || []).map(k => PERM_L[k]).filter(Boolean).join(', ') || 'aucune rubrique')) + `<div class="wrap sec"><div class="tabs">${tabs.map(([k, l]) => `<a class="${tab === k ? 'on' : ''}" href="#/admin/${k}">${l}</a>`).join('')}</div>${body}</div>`;
+  return head('Direction FATIGLOBAL', me.role === 'admin' ? 'Administration générale — supervision de toute la plateforme.' : 'Administrateur secondaire — accès : ' + ((me.permissions || []).map(k => PERM_L[k]).filter(Boolean).join(', ') || 'aucune rubrique')) + `<div class="wrap sec"><div class="tabs admin-tabs">${tabs.map(([k, l]) => `<a class="${tab === k ? 'on' : ''}" href="#/admin/${k}">${l}</a>`).join('')}</div>${body}</div>`;
 }
 
 /* ---------- routeur ---------- */
 function nav(p, h) {
   const staff = role() && role() !== 'participant' ? 'd-only' : '';
-  const l = [['#/', 'Événements', 'Événements', 'cal', '', ['', 'e']], ['#/votes', 'Votes', 'Votes', 'vote', staff, ['votes', 'vote']], ['#/cagnottes', 'Cagnottes', 'Cagnottes', 'heart', staff, ['cagnottes', 'cagnotte', 'paiement']], ['#/inscriptions', 'Inscriptions', 'Inscriptions', 'form', 'd-only', ['inscriptions', 'inscription']], ['#/billets', 'Mes billets', 'Billets', 'ticket', '', ['billets', 'commande']]];
+  const l = [['#/', 'Événements', 'Événements', 'cal', '', ['', 'e']], ['#/votes', 'Votes', 'Votes', 'vote', staff, ['votes', 'vote']], ['#/cagnottes', 'Cagnottes', 'Cagnottes', 'heart', staff, ['cagnottes', 'cagnotte', 'paiement']], ['#/inscriptions', 'Inscriptions', 'Inscriptions', 'form', 'd-only', ['inscriptions', 'inscription']], ['#/lieux', 'Lieux', 'Lieux', 'pin', 'd-only', ['lieux', 'lieu']], ['#/billets', 'Mes billets', 'Billets', 'ticket', '', ['billets', 'commande']]];
   if (role() === 'vendeur') l.push(['#/vente', 'Vente au guichet', 'Vente', 'cash']);
   if (role() === 'organisateur') l.push(['#/org', 'Espace organisateur', 'Espace', 'grid']);
   if (['organisateur', 'scanner', 'admin'].includes(role())) l.push(['#/scan', 'Scanner', 'Scanner', 'cam']);
