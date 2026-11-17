@@ -3,9 +3,11 @@
 const CFG = window.FB_CONFIG || {}, READY = /^https:\/\/.+\..+/.test(CFG.url || '') && (CFG.anonKey || '').length > 20;
 const sb = READY ? supabase.createClient(CFG.url, CFG.anonKey) : null;
 const DAY = 864e5, GUEST_KEY = 'fatibillets-commandes';
+// Langue d'affichage (choisie dans modules5.js) : formats de date et de nombre.
+const LOC = () => window.FB_LANG === 'en' ? 'en-GB' : 'fr-FR';
 // Taux de commission : fixé par la Direction dans Administration > Paramètres. Tant qu'il ne l'est pas, rien n'est calculé.
 let RATE = null;
-const commLabel = () => RATE == null ? 'taux à définir' : (RATE * 100).toLocaleString('fr-FR') + ' %';
+const commLabel = () => RATE == null ? 'taux à définir' : (RATE * 100).toLocaleString(LOC()) + ' %';
 const commValue = (x, cur) => RATE == null ? '—' : money(x * RATE, cur);
 const UI = { q: '', cat: '', when: '', sort: 'date', sel: {}, selDate: {}, authTab: 'in', adminTab: 'vue' };
 let ME = null, DATA = null, seq = 0, cam = { on: false, last: '' };
@@ -13,13 +15,13 @@ let ME = null, DATA = null, seq = 0, cam = { on: false, last: '' };
 /* ---------- utilitaires ---------- */
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const num = n => new Intl.NumberFormat('fr-FR').format(Math.round(n));
+const num = n => new Intl.NumberFormat(LOC()).format(Math.round(n));
 const fmt = (n, cur = 'GNF') => +n === 0 ? 'Gratuit' : num(n) + ' ' + cur;
 const money = (n, cur = 'GNF') => num(n) + ' ' + cur;
 const ts = v => typeof v === 'number' ? v : Date.parse(v);
-const dFmt = v => new Date(ts(v)).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
-const hFmt = v => new Date(ts(v)).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-const dtFmt = v => new Date(ts(v)).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+const dFmt = v => new Date(ts(v)).toLocaleDateString(LOC(), { weekday: 'short', day: 'numeric', month: 'short' });
+const hFmt = v => new Date(ts(v)).toLocaleTimeString(LOC(), { hour: '2-digit', minute: '2-digit' });
+const dtFmt = v => new Date(ts(v)).toLocaleString(LOC(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 const day0 = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return +d; };
 const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const initials = s => String(s).split(/\s+/).map(w => w[0] || '').slice(0, 2).join('').toUpperCase();

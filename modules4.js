@@ -170,5 +170,4 @@ Object.assign(F, {
   async siteHome(f) { const r = f.get('reason'), feat = f.getAll('featured'); if (feat.length && feat.length < 3) throw new Error('Sélectionnez au moins 3 événements, ou aucun.'); await rpc2('set_site_setting', { p_key: 'home_title', p_value: f.get('home_title') || null, p_reason: r }); await rpc2('set_site_setting', { p_key: 'home_subtitle', p_value: f.get('home_subtitle') || null, p_reason: r }); await rpc2('set_site_setting', { p_key: 'featured_events', p_value: feat, p_reason: r }); DATA = null; toast('Page d\'accueil enregistrée.'); await render(); },
   async blog(f, form) { const img = await uploadImage(f.get('image')); const id = await rpc2('save_blog_post', { p: { id: form.dataset.id || null, title: f.get('title'), slug: f.get('slug'), excerpt: f.get('excerpt'), body: f.get('body'), image_url: img, published: !!f.get('published') } }); UI.blogEdit = id; toast('Article enregistré.'); await render(); },
 });
-
-boot();
+// boot() est appelé à la fin de modules5.js, chargé après ce fichier.

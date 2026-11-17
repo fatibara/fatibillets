@@ -327,3 +327,10 @@ tr[hidden]{display:none}
 .print-sheet .print-tk{break-inside:avoid;page-break-inside:avoid}
 .feat-list{max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:8px 12px;display:grid;gap:6px}
 @media print{dialog .dlg{padding:0}.print-sheet{gap:2mm}}
+/* ---------- Panier et langue (v7) ---------- */
+.cart-btn{color:var(--o-d);border-color:var(--o-200)}
+.cart-btn span{background:var(--o)}
+.lang-top{border:1.5px solid var(--line);background:#fff;border-radius:10px;font:inherit;font-weight:800;font-size:.78rem;padding:7px 9px;cursor:pointer;color:var(--ink);flex:none}
+.lang-top:hover{border-color:var(--o-200)}
+.lang-btn{color:var(--mut);text-decoration:none;font-weight:700}
+@media(max-width:720px){.cart-btn{position:absolute;right:64px;top:8px}.lang-top{display:none}}
