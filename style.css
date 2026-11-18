@@ -334,3 +334,18 @@ tr[hidden]{display:none}
 .lang-top:hover{border-color:var(--o-200)}
 .lang-btn{color:var(--mut);text-decoration:none;font-weight:700}
 @media(max-width:720px){.cart-btn{position:absolute;right:64px;top:8px}.lang-top{display:none}}
+/* ---------- Plan de salle, connexion en tant que (v8) ---------- */
+.impbar{position:sticky;top:0;z-index:40;background:#7C2D12;color:#fff;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 16px;font-size:.86rem}
+.impbar .btn{background:#fff;color:#7C2D12;box-shadow:none}
+.seatmap-wrap{overflow:auto;max-height:60vh;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--o-50)}
+.seatmap{display:inline-flex;flex-direction:column;gap:5px;min-width:100%}
+.stage{background:var(--ink);color:#fff;text-align:center;font-weight:800;letter-spacing:.3em;font-size:.72rem;padding:6px;border-radius:0 0 40px 40px;margin-bottom:10px}
+.seat-row{display:flex;align-items:center;gap:4px;justify-content:center;white-space:nowrap}
+.seat-lbl{width:22px;text-align:center;font-weight:800;font-size:.75rem;color:var(--mut);flex:none}
+.st{width:26px;height:26px;border-radius:7px 7px 4px 4px;border:1.5px solid var(--o-200);background:#fff;font:inherit;font-size:.66rem;font-weight:700;color:var(--o-dd);cursor:pointer;flex:none;padding:0}
+.st:hover:not(:disabled){border-color:var(--o)}
+.st.on{background:var(--o);border-color:var(--o);color:#fff}
+.st:disabled{background:#D9CFC7;border-color:#D9CFC7;color:#fff;cursor:not-allowed}
+.aisle{width:14px;flex:none}
+.st-k{display:inline-block;width:14px;height:14px;border-radius:4px;border:1.5px solid var(--o-200);background:#fff;vertical-align:-2px;margin-right:4px}
+.st-k.on{background:var(--o);border-color:var(--o)} .st-k.tk{background:#D9CFC7;border-color:#D9CFC7}

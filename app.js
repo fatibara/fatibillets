@@ -123,7 +123,7 @@ function ring(list) {
 const tkBadge = s => s === 'valide' ? ['Valide', 'green'] : s === 'utilise' ? ['Utilisé', 'gray'] : ['Remboursé', 'red'];
 function ticketCard(k, o, actions = true) {
   return `<div class="tk ${k.status !== 'valide' ? 'used' : ''}"><div class="tk-l"><div class="row between"><span class="xs mut">BILLET D'ENTRÉE</span>${badge(tkBadge(k.status))}</div>
-  <h3>${esc(o.event.name)}</h3><span class="sm">${ic('cal')} ${dFmt(o.starts_at)} · ${hFmt(o.starts_at)}</span><span class="sm">${ic('pin')} ${esc(o.event.venue || '')}, ${esc(o.event.city || '')}</span><span class="sm"><b>${esc(k.tier)}</b> · ${fmt(k.price, o.currency)}</span><span class="sm mut">Titulaire : ${esc(o.buyer_name)}</span>
+  <h3>${esc(o.event.name)}</h3><span class="sm">${ic('cal')} ${dFmt(o.starts_at)} · ${hFmt(o.starts_at)}</span><span class="sm">${ic('pin')} ${esc(o.event.venue || '')}, ${esc(o.event.city || '')}</span><span class="sm"><b>${esc(k.tier)}</b>${k.seat ? ` · <b>Place ${esc(k.seat)}</b>` : ''} · ${fmt(k.price, o.currency)}</span><span class="sm mut">Titulaire : ${esc(o.buyer_name)}</span>
   <span class="xs mut">Créé le ${dtFmt(k.created_at)}${k.scanned_at ? ' · scanné le ' + dtFmt(k.scanned_at) : ''}</span>
   ${actions ? `<div class="row noprint" style="margin-top:8px"><button class="btn s" data-a="showTicket" data-order="${o.id}" data-code="${esc(k.code)}">Afficher / Imprimer</button></div>` : ''}</div>
   <div class="tk-r">${qrSvg(k.code)}<span class="tk-code">${esc(k.code)}</span></div></div>`;

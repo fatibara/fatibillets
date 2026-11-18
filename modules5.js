@@ -196,6 +196,7 @@ Object.assign(A, {
   },
 });
 Object.assign(F, {
+  // (le choix des places sur plan de salle est ajouté par modules6.js)
   async cartCheckout(f) {
     const D = await loadData(true), L = cartResolve(D), groups = [...new Set(L.map(x => x.d.id))];
     if (!L.length) throw new Error('Votre panier est vide.');
@@ -231,5 +232,4 @@ render = async function () { await _render5(); cartSync(); };
   auth.insertAdjacentHTML('beforebegin', `<button class="lang-top" data-a="langSwitch" data-v="${window.FB_LANG === 'en' ? 'fr' : 'en'}" title="${window.FB_LANG === 'en' ? 'Français' : 'English'}">${window.FB_LANG === 'en' ? 'FR' : 'EN'}</button>`);
   cartSync();
 })();
-
-boot();
+// boot() est appelé à la fin de modules6.js, chargé après ce fichier.
