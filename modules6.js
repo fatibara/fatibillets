@@ -146,6 +146,10 @@ Object.assign(F, {
 });
 Object.assign(I, { cityCountry(v) { UI.cityCountry = v; render(); } });
 
+// Création d'événement : la Guinée est proposée par défaut (la liste des pays est alphabétique).
+const _org6 = VIEWS.org;
+VIEWS.org = async p => { const h = await _org6(p); return p[1] === 'nouveau' ? h.replace('<option>Guinée</option>', '<option selected>Guinée</option>') : h; };
+
 /* ---------- après chaque affichage : bandeau « connecté en tant que », villes ---------- */
 const _render6 = render;
 render = async function () { await _render6(); impSync(); citySync(); };
