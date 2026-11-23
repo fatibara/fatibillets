@@ -221,10 +221,10 @@ function vAuth() {
   <label class="f">E-mail<input name="email" type="email" required autocomplete="email"></label><label class="f">Mot de passe<input name="password" type="password" required minlength="8" autocomplete="${up ? 'new-password' : 'current-password'}"></label>
   <button class="btn xl">${up ? 'Créer mon compte' : 'Se connecter'}</button>${up ? '<p class="xs mut" style="margin:0">Le compte est gratuit. Il n\'est pas obligatoire pour acheter un billet.</p>' : '<button type="button" class="link sm" data-a="forgot">Mot de passe oublié ?</button>'}</form></div></div>`;
 }
-const ROLE_L = { participant: 'Participant', organisateur: 'Organisateur', scanner: 'Scanner', vendeur: 'Vendeur', admin_secondaire: 'Administrateur secondaire', admin: 'Administrateur général' };
+const ROLE_L = { participant: 'Participant', organisateur: 'Organisateur', scanner: 'Scanner', vendeur: 'Vendeur', transporteur: 'Transporteur', chauffeur: 'Chauffeur', admin_secondaire: 'Administrateur secondaire', admin: 'Administrateur général' };
 // Rubriques de l'administration et permission requise pour chacune ('__admin' = administrateur général uniquement).
-const PERM_L = { comptes: 'Comptes et rôles', evenements: 'Événements', transactions: 'Transactions', paiements: 'Paiements et retraits', activites: 'Votes, cagnottes, inscriptions', referentiels: 'Catégories, pays, devises', reclamations: 'Réclamations', assistance: 'Assistance aux organisateurs', journal: 'Journal d\'audit', contenus: 'Pages et centre d\'aide' };
-const TAB_PERM = { comptes: 'comptes', evenements: 'evenements', categories: 'referentiels', journal: 'journal', transactions: 'transactions', paiements: 'paiements', activites: 'activites', pays: 'referentiels', reclamations: 'reclamations', assist: 'assistance', parametres: '__admin', lieux: 'referentiels', avis: 'evenements', contenus: 'contenus' };
+const PERM_L = { comptes: 'Comptes et rôles', evenements: 'Événements', transactions: 'Transactions', paiements: 'Paiements et retraits', activites: 'Votes, cagnottes, inscriptions', referentiels: 'Catégories, pays, devises', reclamations: 'Réclamations', assistance: 'Assistance aux organisateurs', journal: 'Journal d\'audit', contenus: 'Pages et centre d\'aide', transport: 'FATI-TRANSPORT' };
+const TAB_PERM = { comptes: 'comptes', evenements: 'evenements', categories: 'referentiels', journal: 'journal', transactions: 'transactions', paiements: 'paiements', activites: 'activites', pays: 'referentiels', reclamations: 'reclamations', assist: 'assistance', parametres: '__admin', lieux: 'referentiels', avis: 'evenements', contenus: 'contenus', transport: 'transport' };
 const isStaff = () => ['admin', 'admin_secondaire'].includes(role());
 const can = (perm, me) => !perm || me.role === 'admin' || (perm !== '__admin' && (me.permissions || []).includes(perm));
 function vAccount() {
@@ -316,8 +316,10 @@ async function vAdmin(tab = 'vue') {
 /* ---------- routeur ---------- */
 function nav(p, h) {
   const staff = role() && role() !== 'participant' ? 'd-only' : '';
-  const l = [['#/', 'Événements', 'Événements', 'cal', '', ['', 'e']], ['#/votes', 'Votes', 'Votes', 'vote', staff, ['votes', 'vote']], ['#/cagnottes', 'Cagnottes', 'Cagnottes', 'heart', staff, ['cagnottes', 'cagnotte', 'paiement']], ['#/inscriptions', 'Inscriptions', 'Inscriptions', 'form', 'd-only', ['inscriptions', 'inscription']], ['#/lieux', 'Lieux', 'Lieux', 'pin', 'd-only', ['lieux', 'lieu']], ['#/billets', 'Mes billets', 'Billets', 'ticket', '', ['billets', 'commande']]];
+  const l = [['#/', 'Événements', 'Accueil', 'cal', '', ['', 'e']], ['#/transport', 'Transport', 'Transport', 'bus', '', ['transport', 'voyage', 'colis']], ['#/votes', 'Votes', 'Votes', 'vote', staff, ['votes', 'vote']], ['#/cagnottes', 'Cagnottes', 'Cagnottes', 'heart', 'd-only', ['cagnottes', 'cagnotte', 'paiement']], ['#/inscriptions', 'Inscriptions', 'Inscriptions', 'form', 'd-only', ['inscriptions', 'inscription']], ['#/lieux', 'Lieux', 'Lieux', 'pin', 'd-only', ['lieux', 'lieu']], ['#/billets', 'Mes billets', 'Billets', 'ticket', '', ['billets', 'commande']]];
   if (role() === 'vendeur') l.push(['#/vente', 'Vente au guichet', 'Vente', 'cash']);
+  if (role() === 'transporteur') l.push(['#/transporteur', 'Espace transporteur', 'Espace', 'grid']);
+  if (role() === 'chauffeur') l.push(['#/chauffeur', 'Mes missions', 'Missions', 'grid']);
   if (role() === 'organisateur') l.push(['#/org', 'Espace organisateur', 'Espace', 'grid']);
   if (['organisateur', 'scanner', 'admin'].includes(role())) l.push(['#/scan', 'Scanner', 'Scanner', 'cam']);
   if (isStaff()) l.push(['#/admin', 'Administration', 'Admin', 'shield']);

@@ -349,3 +349,20 @@ tr[hidden]{display:none}
 .aisle{width:14px;flex:none}
 .st-k{display:inline-block;width:14px;height:14px;border-radius:4px;border:1.5px solid var(--o-200);background:#fff;vertical-align:-2px;margin-right:4px}
 .st-k.on{background:var(--o);border-color:var(--o)} .st-k.tk{background:#D9CFC7;border-color:#D9CFC7}
+/* ---------- FATI-TRANSPORT (v9) ---------- */
+.tr-search{display:grid;grid-template-columns:1fr auto 1fr repeat(3,minmax(120px,1fr)) auto;gap:10px;align-items:end}
+.tr-swap{align-self:end;height:44px}
+@media(max-width:1000px){.tr-search{grid-template-columns:1fr 1fr}.tr-swap{display:none}}
+.trip-card{display:grid;grid-template-columns:200px 1fr 170px;gap:16px;align-items:center;padding:16px 18px}
+.trip-co{display:flex;flex-direction:column;gap:4px}
+.trip-line{display:flex;align-items:center;gap:12px}
+.trip-t{display:flex;flex-direction:column;min-width:80px}.trip-t b{font-size:1.25rem}
+.trip-mid{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:60px}
+.trip-mid i{display:block;width:100%;height:2px;background:repeating-linear-gradient(90deg,var(--o) 0 8px,transparent 8px 14px)}
+.trip-buy{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+@media(max-width:760px){.trip-card{grid-template-columns:1fr}.trip-buy{flex-direction:row;align-items:center;justify-content:space-between}}
+.bus-map{display:inline-flex;flex-direction:column;gap:6px;background:var(--o-50);border:2px solid var(--o-200);border-radius:22px 22px 12px 12px;padding:14px;align-self:center}
+.bus-front{text-align:center;font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);border-bottom:2px dashed var(--o-200);padding-bottom:8px;margin-bottom:4px}
+.bus-row{display:flex;gap:6px;justify-content:center}
+.bus-map .st{width:36px;height:36px;font-size:.78rem}
+.st-empty{width:36px;height:36px;flex:none}

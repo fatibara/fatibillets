@@ -155,5 +155,4 @@ const _render6 = render;
 render = async function () { await _render6(); impSync(); citySync(); };
 
 Object.assign(EN, { 'Choisir mes places': 'Choose my seats', 'Plan de salle': 'Seating plan', 'Revenir à mon compte administrateur': 'Back to my administrator account', 'Se connecter en tant que': 'Sign in as', 'Libre': 'Free', 'Votre choix': 'Your choice', 'Prise': 'Taken', 'Villes': 'Cities' });
-
-boot();
+// boot() est appelé à la fin de modules7.js, chargé après ce fichier.
