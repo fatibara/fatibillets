@@ -324,6 +324,8 @@ function nav(p, h) {
   if (['organisateur', 'scanner', 'admin'].includes(role())) l.push(['#/scan', 'Scanner', 'Scanner', 'cam']);
   if (isStaff()) l.push(['#/admin', 'Administration', 'Admin', 'shield']);
   l.push(ME ? ['#/compte', 'Mon compte', 'Compte', 'user', 'm-only'] : ['#/connexion', 'Connexion', 'Connexion', 'user', 'm-only']);
+  // Un compte vendeur ne sert qu'à vendre : menu réduit à la vente et au compte.
+  if (role() === 'vendeur') l.splice(0, l.length, ['#/vente', 'Vente au guichet', 'Vente', 'cash'], ['#/compte', 'Mon compte', 'Compte', 'user', 'm-only']);
   $('#nav').innerHTML = l.map(([u, t, s, i, c, m]) => `<a href="${u}" class="${c || ''} ${(m ? m.includes(p[0]) : h.startsWith(u)) ? 'on' : ''}">${ic(i)}<span class="n-full">${t}</span><span class="n-short">${s}</span></a>`).join('');
   $('#auth').innerHTML = ME ? `<a class="btn s ghost" href="#/compte">${ic('user')} ${esc((ME.full_name || ME.email || '').split(' ')[0])}</a>` : `<a class="btn s" href="#/connexion">Connexion</a>`;
 }

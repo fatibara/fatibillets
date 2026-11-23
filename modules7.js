@@ -199,5 +199,4 @@ Object.assign(I, {
 });
 
 Object.assign(EN, { 'Transport': 'Transport', 'Fati-Transport': 'Fati-Transport', 'Départ': 'From', 'Arrivée': 'To', 'Aller le': 'Departure date', 'Retour le (facultatif)': 'Return date (optional)', 'Véhicule': 'Vehicle', 'Choisir': 'Select', 'Complet': 'Full', 'Suivre un colis': 'Track a parcel', 'Suivi de colis': 'Parcel tracking', 'Passagers': 'Passengers', 'Continuer vers le retour': 'Continue to return trip', 'Après-demain': 'In two days', 'Billet de transport': 'Transport ticket', 'Mes missions': 'My trips', 'Espace transporteur': 'Carrier area', 'Embarquement': 'Boarding', 'EMBARQUEMENT AUTORISÉ': 'BOARDING ALLOWED', 'DÉJÀ EMBARQUÉ': 'ALREADY BOARDED', 'Aucun départ trouvé.': 'No departure found.' });
-
-boot();
+// boot() est appelé à la fin de modules8.js, chargé après ce fichier.
