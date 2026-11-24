@@ -382,3 +382,23 @@ tr[hidden]{display:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 .print-head{margin-bottom:10px}
 @media(max-width:640px){.podium{gap:6px}.pod-av{width:56px;height:56px}.pod-1 .pod-av{width:70px;height:70px}.cand-photo{width:96px;height:96px}}
+/* ---------- v13 : formulaires d'inscription, localisation, galeries ---------- */
+.req{color:#d4500a;font-weight:800}
+.field-matrix{display:grid;gap:14px}
+.fm-sec{border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:6px}
+.fm-sec>b{font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--o-d)}
+.fm-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:4px 0;border-top:1px dashed var(--line)}
+.fm-row:first-of-type{border-top:0}
+.fm-row>span{font-size:.92rem}
+.fm-opts{display:flex;gap:4px;flex-wrap:wrap}
+.fm-opts label{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;padding:4px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;user-select:none}
+.fm-opts label input{position:absolute;opacity:0;pointer-events:none}
+.fm-opts label.on{background:var(--o,#f97316);border-color:var(--o,#f97316);color:#fff;font-weight:700}
+.geo-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:12px;background:rgba(249,115,22,.07);border:1px dashed rgba(249,115,22,.45)}
+.geo-bar .geo-msg{flex:1;min-width:200px}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.gal img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block}
+.gal-edit{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.gal-edit label{display:grid;gap:4px}
+.gal-edit img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px}
+@media (max-width:560px){.fm-row{flex-direction:column;align-items:flex-start}}

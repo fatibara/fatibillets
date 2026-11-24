@@ -174,5 +174,4 @@ const _render8 = render;
 render = async function () { if (role() === 'vendeur' && /^(#\/?)?$/.test(location.hash || '')) { location.hash = '#/vente'; return; } await _render8(); };
 
 Object.assign(EN, { 'Partager le concours': 'Share the contest', 'Imprimer le classement': 'Print the ranking', 'Classement général': 'Overall ranking', 'Voter gratuitement': 'Vote for free', 'Partager ce candidat': 'Share this candidate', 'Voir le classement': 'See the ranking', 'Points de vente': 'Points of sale', 'Créer un compte vendeur': 'Create a seller account', 'Redirection vers LengoPay…': 'Redirecting to LengoPay…' });
-
-boot();
+// boot() est appelé à la fin de modules9.js, chargé après ce fichier.
