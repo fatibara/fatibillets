@@ -234,6 +234,14 @@ Object.assign(A, {
   fmAll(el) { el.closest('form').querySelectorAll(`.fm-opts input[value="${el.dataset.v}"]`).forEach(i => { i.checked = true; i.dispatchEvent(new Event('change')); }); },
   async openDoc(el) { const { data, error } = await sb.storage.from('candidatures').createSignedUrl(el.dataset.p, 600); if (error) return toast('Document inaccessible : ' + error.message); window.open(data.signedUrl, '_blank', 'noopener'); },
   potEdit(el) { UI.potEdit = el.dataset.id; render(); },
+  // Création d'événement : ajouter / supprimer des dates et des catégories de billets.
+  rowAdd(el) {
+    const list = el.closest('form').querySelector(`[data-list="${el.dataset.k}"]`); if (!list) return;
+    if (list.children.length >= 60) return toast('Nombre maximum atteint.');
+    list.insertAdjacentHTML('beforeend', el.dataset.k === 'date' ? dateRow() : tierRow());
+    const inp = list.lastElementChild.querySelector('input'); if (inp) inp.focus();
+  },
+  rowDel(el) { const row = el.closest('.dyn-row'); if (row) row.remove(); },
 });
 Object.assign(F, {
   async formSave(f, form) {

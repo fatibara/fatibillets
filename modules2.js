@@ -113,7 +113,6 @@ ORG_R.modifier = async () => {
   <div class="g2">${t('name', 'Nom de l\'événement', ev.name, 'required minlength="3"')}<label class="f">Catégorie<select name="category">${D.cats.filter(c => c.active || c.name === ev.category).map(c => `<option ${c.name === ev.category ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>${t('city', 'Ville', ev.city, 'required')}${t('venue', 'Lieu et adresse', ev.venue, 'required')}${t('slogan', 'Slogan', ev.slogan)}<label class="f">Public concerné<select name="audience">${['Tout public', 'Enfant', 'Adolescent', 'Jeune', 'Adulte', 'Famille'].map(a => `<option ${a === ev.audience ? 'selected' : ''}>${a}</option>`).join('')}</select></label></div>
   <label class="f">Description<textarea name="description" rows="4" required>${esc(ev.description || '')}</textarea></label>
   ${t('keywords', 'Mots-clés (séparés par des virgules)', ev.keywords.join(', '))}${t('access', 'Conditions d\'accès', ev.access)}
-  <label class="f">Paiement direct à l'organisateur (facultatif)<textarea name="payment_info" rows="2">${esc(ev.payment_info || '')}</textarea></label>
   <label class="f">Nouvelle affiche (laisser vide pour garder l'actuelle)<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
   <h3 style="margin-bottom:0">Artistes et invités à l'affiche</h3><div id="artists" class="stack">${ev.artists.map(a => artistRow(a, ev)).join('')}</div><div><button type="button" class="btn s ghost" data-a="addArtist">+ Ajouter un artiste ou un invité</button></div>
   <p class="xs mut" style="margin:0">Les prix, quotas et dates ne sont pas modifiables après publication : ils engagent les billets déjà vendus. Chaque modification est conservée dans l'historique ci-dessous.</p>
@@ -190,7 +189,7 @@ Object.assign(F, {
       const day = g('day').value;
       artists.push({ name, role: g('role').value, profession: g('profession').value.trim(), country: g('country').value.trim(), day: day === '' ? null : +day, link: g('link').value.trim(), bio: g('bio').value.trim(), photo: (await uploadImage(g('file').files[0])) || g('photo').value || null });
     }
-    const p = { name: f.get('name'), slogan: f.get('slogan'), description: f.get('description'), category: f.get('category'), city: f.get('city'), venue: f.get('venue'), audience: f.get('audience'), access: f.get('access'), payment_info: f.get('payment_info'), keywords: f.get('keywords').split(',').map(s => s.trim()).filter(Boolean), artists };
+    const p = { name: f.get('name'), slogan: f.get('slogan'), description: f.get('description'), category: f.get('category'), city: f.get('city'), venue: f.get('venue'), audience: f.get('audience'), access: f.get('access'), payment_info: CFG.lengopay ? '' : f.get('payment_info'), keywords: f.get('keywords').split(',').map(s => s.trim()).filter(Boolean), artists };
     const img = await uploadImage(f.get('image')); if (img) p.image_url = img;
     await rpc2('update_event', { p_id: form.dataset.id, p }); DATA = null; toast('Modifications enregistrées.'); await render();
   },
