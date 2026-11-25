@@ -326,7 +326,7 @@ function nav(p, h) {
   if (role() === 'vendeur') l.push(['#/vente', 'Vente au guichet', 'Vente', 'cash']);
   if (role() === 'transporteur') l.push(['#/transporteur', 'Espace transporteur', 'Espace', 'grid']);
   if (role() === 'chauffeur') l.push(['#/chauffeur', 'Mes missions', 'Missions', 'grid']);
-  if (role() === 'organisateur') l.push(['#/org', 'Espace organisateur', 'Espace', 'grid']);
+  if (role() === 'organisateur') l.push(['#/org/evenements', 'Mes événements', 'Mes évén.', 'cal', 'd-only', []], ['#/org', 'Espace organisateur', 'Espace', 'grid']);
   if (['organisateur', 'scanner', 'admin'].includes(role())) l.push(['#/scan', 'Scanner', 'Scanner', 'cam']);
   if (isStaff()) l.push(['#/admin', 'Administration', 'Admin', 'shield']);
   l.push(ME ? ['#/compte', 'Mon compte', 'Compte', 'user', 'm-only'] : ['#/connexion', 'Connexion', 'Connexion', 'user', 'm-only']);
