@@ -11,7 +11,7 @@ VIEWS.connexion = async () => {
   if (UI.authTab === 'up') return h.replace('<label class="f">Téléphone<input name="phone"', '<label class="f">Téléphone (il vous servira à vous connecter)<input name="phone"');
   return h.replace('<label class="f">E-mail<input name="email" type="email" required autocomplete="email"></label>', '<label class="f">Numéro de téléphone ou e-mail<input name="email" required autocomplete="username" placeholder="Ex. 620 00 00 00"></label>');
 };
-const landing = () => ({ admin: '#/admin', admin_secondaire: '#/admin', organisateur: '#/org', vendeur: '#/vente', transporteur: '#/transporteur', chauffeur: '#/chauffeur', scanner: '#/scan' }[role()] || '#/');
+const landing = () => ({ admin: '#/admin', admin_secondaire: '#/admin', organisateur: '#/org', vendeur: '#/vente', transporteur: '#/transporteur', chauffeur: '#/chauffeur', scanner: '#/scan' }[role()] || (ME && ME.org_requested ? '#/org' : ME && ME.carrier_request ? '#/transporteur' : '#/'));
 const _signin9 = F.signin;
 F.signin = async f => {
   const id = (f.get('email') || '').trim();
@@ -264,4 +264,4 @@ render = async function () { await _render9(); geoButtons(); };
 
 Object.assign(EN, { 'Numéro de téléphone ou e-mail': 'Phone number or email', 'Utiliser ma position actuelle': 'Use my current location', 'Champs du formulaire': 'Form fields', 'Non': 'No', 'Facultatif': 'Optional', 'Obligatoire': 'Required', 'Voir sur la carte ↗': 'See on map ↗', 'Supprimer': 'Delete' });
 
-boot();
+// boot() est appelé à la fin de modules10.js, chargé après ce fichier.

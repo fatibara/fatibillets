@@ -410,3 +410,21 @@ tr[hidden]{display:none}
 .dyn-del{width:44px;height:44px;padding:0;font-size:1.4rem;line-height:1;justify-content:center}
 button.dyn-del:hover{background:#fee2e2;border-color:#ef4444;color:#b91c1c}
 @media (max-width:640px){.dyn-row,.dyn-list[data-list="date"] .dyn-row{grid-template-columns:1fr 1fr}.dyn-row>.dyn-del{grid-column:2;justify-self:end}.dyn-row>span.dyn-del{display:none}}
+/* ---------- v15 : choix du profil à l'inscription ---------- */
+.pf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pf-card{position:relative;display:flex;flex-direction:column;gap:4px;padding:14px 12px 12px;border:2px solid var(--line);border-radius:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s,background .15s}
+.pf-card input{position:absolute;opacity:0;pointer-events:none}
+.pf-card:hover{border-color:var(--o-200)}
+.pf-card.on{border-color:var(--o);background:var(--o-50);box-shadow:0 6px 18px rgba(242,106,15,.14)}
+.pf-card:focus-within{outline:2px solid var(--o-l);outline-offset:2px}
+.pf-ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--o-100);color:var(--o-d)}
+.pf-ic svg{width:20px;height:20px}
+.pf-card.on .pf-ic{background:var(--o);color:#fff}
+.pf-tag{margin-top:auto;padding-top:6px;font-size:.72rem;font-weight:700;color:var(--o-d)}
+.pf-steps{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.pf-steps li{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);color:var(--gray)}
+.pf-steps li svg{width:18px;height:18px}
+.pf-steps li.ok{color:var(--green);background:var(--green-bg);border-color:transparent;font-weight:650}
+.pf-steps li.cur{color:var(--o-dd);background:var(--o-50);border-color:var(--o-200);font-weight:650}
+.spin-dot{width:14px;height:14px;border-radius:50%;border:2.5px solid var(--o-200);border-top-color:var(--o);animation:spin 1s linear infinite;flex:none}
+@media (max-width:600px){.pf-grid{grid-template-columns:1fr}.pf-card{flex-direction:row;flex-wrap:wrap;align-items:center;column-gap:10px}.pf-card>.xs{flex-basis:100%}.pf-tag{margin:0 0 0 auto;padding:0}}
