@@ -45,7 +45,7 @@ VIEWS.notifications = async () => {
 };
 
 /* ---------- assistance : dossiers de l'utilisateur ---------- */
-function ticketCard(t, staff) {
+function supportCard(t, staff) {
   return `<div class="card pad stack"><div class="row between"><div><b>${esc(t.subject)}</b><div class="xs mut">${esc(t.number)} · ouvert le ${dtFmt(t.created_at)}${staff && t.user ? ' · ' + esc(t.user.name || t.user.email || '') + ' (' + esc(ROLE_L[t.user.role] || '') + ')' : ''}${t.assignee ? ' · suivi par ' + esc(t.assignee) : ''}</div></div>${badge(tStatus(t.status))}</div>
   <div class="stack">${t.messages.map(m => `<div class="msg ${m.staff ? 'staff' : ''}"><div class="xs mut">${m.staff ? 'Équipe FATIGLOBAL' : staff ? 'Utilisateur' : 'Vous'} · ${dtFmt(m.at)}</div><div style="white-space:pre-wrap">${esc(m.body)}</div></div>`).join('')}</div>
   <form class="row" data-f="ticketReply" data-id="${t.id}"><input class="in" style="flex:1;margin:0;min-width:160px" name="body" required minlength="2" maxlength="5000" placeholder="${staff ? 'Réponse à l\'utilisateur…' : 'Votre message…'}"><button class="btn s">Envoyer</button></form>
@@ -54,7 +54,7 @@ function ticketCard(t, staff) {
 VIEWS.assistance = async () => {
   if (!ME) return needLogin();
   const T = await rpc2('my_tickets');
-  return head('Assistance', 'Une question, un problème de paiement ou de billet ? Ouvrez un dossier : l\'équipe FATIGLOBAL vous répond ici.') + `<div class="wrap sec"><div class="cols"><div class="stack">${T.length ? T.map(t => ticketCard(t, false)).join('') : '<div class="empty">Vous n\'avez ouvert aucun dossier.</div>'}</div>
+  return head('Assistance', 'Une question, un problème de paiement ou de billet ? Ouvrez un dossier : l\'équipe FATIGLOBAL vous répond ici.') + `<div class="wrap sec"><div class="cols"><div class="stack">${T.length ? T.map(t => supportCard(t, false)).join('') : '<div class="empty">Vous n\'avez ouvert aucun dossier.</div>'}</div>
   <form class="card pad stack sticky" data-f="newTicket"><h3>Nouveau dossier</h3><label class="f">Sujet<input name="subject" required minlength="4" maxlength="120" placeholder="Ex. Billet non reçu après paiement"></label><label class="f">Description<textarea name="body" rows="5" required minlength="10" maxlength="5000" placeholder="Décrivez le problème, avec la référence de commande si vous l'avez."></textarea></label><button class="btn">Envoyer le dossier</button></form></div></div>`;
 };
 
@@ -146,7 +146,7 @@ ADMIN_R.comptes = async (D, me) => {
 ADMIN_R.reclamations = async () => {
   const T = await rpc2('admin_tickets'), f = UI.tf || 'actifs', L = T.filter(t => f === 'tous' || (f === 'actifs' ? t.status !== 'resolu' : t.status === f));
   const n = k => T.filter(t => k === 'tous' || (k === 'actifs' ? t.status !== 'resolu' : t.status === k)).length;
-  return `<div class="stack"><div class="chips">${[['actifs', 'À traiter'], ['ouvert', 'Ouverts'], ['en_cours', 'En cours'], ['resolu', 'Résolus'], ['tous', 'Tous']].map(([k, l]) => `<button class="chip ${f === k ? 'on' : ''}" data-a="tf" data-v="${k}">${l} (${n(k)})</button>`).join('')}</div>${L.length ? L.map(t => ticketCard(t, true)).join('') : '<div class="empty">Aucun dossier dans cette liste.</div>'}</div>`;
+  return `<div class="stack"><div class="chips">${[['actifs', 'À traiter'], ['ouvert', 'Ouverts'], ['en_cours', 'En cours'], ['resolu', 'Résolus'], ['tous', 'Tous']].map(([k, l]) => `<button class="chip ${f === k ? 'on' : ''}" data-a="tf" data-v="${k}">${l} (${n(k)})</button>`).join('')}</div>${L.length ? L.map(t => supportCard(t, true)).join('') : '<div class="empty">Aucun dossier dans cette liste.</div>'}</div>`;
 };
 ADMIN_R.assist = async () => {
   const id = location.hash.split('/')[3]; if (!id) return box('Organisateur non précisé', '<a class="btn" href="#/admin/comptes">Comptes</a>');

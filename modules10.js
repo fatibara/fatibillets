@@ -106,4 +106,4 @@ F.carrierRequest = async f => { await rpc2('request_carrier', { p_name: f.get('n
 
 Object.assign(EN, { 'Je crée un compte :': 'I am creating an account:', 'Participant': 'Participant', 'Organisateur': 'Organizer', 'Transport & logistique': 'Transport & logistics', 'Actif tout de suite': 'Active right away', 'Validé par la Direction': 'Approved by management', 'Demandes de profil à valider': 'Profile requests to approve', 'Valider': 'Approve', 'Refuser': 'Reject' });
 
-boot();
+// boot() est appelé à la fin de modules11.js, chargé après ce fichier.

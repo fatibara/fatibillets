@@ -256,7 +256,9 @@ async function orgTickets() {
 // Lignes ajoutables / supprimables du formulaire de création (dates et catégories de billets).
 const delBtn = `<button type="button" class="btn s ghost dyn-del" data-a="rowDel" title="Supprimer" aria-label="Supprimer">−</button>`;
 const dateRow = () => `<div class="dyn-row"><label class="f">Date<input name="xdate" type="date" required></label><label class="f">Début<input name="xtime" type="time" value="19:00" required></label>${delBtn}</div>`;
-const tierRow = (n = '', p = '', q = '', first = false) => `<div class="dyn-row"><label class="f">Catégorie<input name="tn" value="${esc(n)}" required placeholder="Ex. VVIP"></label><label class="f">Prix (GNF, 0 = gratuit)<input name="tp" type="number" min="0" step="1000" value="${p}" required></label><label class="f">Nombre de places<input name="tq" type="number" min="1" value="${q}" required></label>${first ? '<span class="dyn-del"></span>' : delBtn}</div>`;
+// Billet gratuit : le prix passe à 0 et n'est plus modifiable (le champ reste envoyé pour garder l'ordre des lignes).
+window.tierType = s => { const p = s.closest('.dyn-row').querySelector('[name="tp"]'); const free = s.value === 'free'; p.readOnly = free; if (free) p.value = 0; else if (+p.value === 0) { p.value = ''; p.focus(); } };
+const tierRow = (n = '', p = '', q = '', first = false) => `<div class="dyn-row tier-row"><label class="f">Nom du billet<input name="tn" value="${esc(n)}" required placeholder="Ex. VVIP"></label><label class="f">Type<select name="tt" onchange="tierType(this)"><option value="paid">Payant</option><option value="free">Gratuit</option></select></label><label class="f">Prix (montant)<input name="tp" type="number" min="0" step="500" value="${p}" required></label><label class="f">Quantité<input name="tq" type="number" min="1" value="${q}" required></label>${first ? '<span class="dyn-del"></span>' : delBtn}<label class="f">Début de la vente <span class="xs mut">(facultatif)</span><input name="ts" type="datetime-local"></label><label class="f">Fin de la vente <span class="xs mut">(facultatif)</span><input name="te" type="datetime-local"></label></div>`;
 async function vNewEvent() {
   if (!ME) return needLogin(); if (role() !== 'organisateur') return denied();
   const D = await loadData(), tm = new Date(day0() + 7 * DAY), iso = `${tm.getFullYear()}-${String(tm.getMonth() + 1).padStart(2, '0')}-${String(tm.getDate()).padStart(2, '0')}`;
@@ -270,7 +272,7 @@ async function vNewEvent() {
   ${CFG.lengopay ? '' : '<label class="f">Instructions de paiement affichées à l\'acheteur<textarea name="payment_info" rows="2" required placeholder="Ex. Orange Money : 6XX XX XX XX (Nom du compte)"></textarea></label>'}
   <div><div class="row between"><h3 style="margin:0">Catégories de billets et quotas</h3><button type="button" class="btn s ghost" data-a="rowAdd" data-k="tier">+ Ajouter une catégorie</button></div><div class="dyn-list" data-list="tier" style="margin-top:10px">${[['Standard', 50000, 1000], ['VIP', 150000, 100]].map(([n, p, q], i) => tierRow(n, p, q, i === 0)).join('')}</div></div>
   <label class="f">Artistes et invités (un par ligne : Nom — Rôle)<textarea name="artists" rows="3" placeholder="Nom de l'artiste — Artiste principal"></textarea></label>
-  <div class="row"><button class="btn">Publier l'événement</button><a class="btn ghost" href="#/org">Annuler</a></div></form></div>`;
+  <div class="row"><button class="btn xl">Enregistrer l'événement</button><a class="btn ghost" href="#/org">Annuler</a></div></form></div>`;
 }
 
 /* ---------- scanner ---------- */
@@ -414,7 +416,8 @@ const F = {
       image_url = sb.storage.from('affiches').getPublicUrl(path).data.publicUrl;
     }
     const start = new Date(f.get('date') + 'T' + f.get('time')), tiers = [], pal = [['#FF8A1F', '#C2185B'], ['#F59E0B', '#D4500A'], ['#EA580C', '#7C2D12'], ['#B45309', '#E11D48'], ['#FB923C', '#9A3412'], ['#F97316', '#4C1D95']];
-    const tp = f.getAll('tp'), tq = f.getAll('tq'); f.getAll('tn').forEach((n, i) => { n = n.trim(); const q = +tq[i]; if (n && q > 0) tiers.push({ name: n, price: +tp[i] || 0, quota: q }); });
+    const tp = f.getAll('tp'), tq = f.getAll('tq'), tt = f.getAll('tt'); f.getAll('tn').forEach((n, i) => { n = n.trim(); const q = +tq[i]; if (!n || !(q > 0)) return; if (tt[i] !== 'free' && !(+tp[i] > 0)) throw new Error('Indiquez le prix du billet « ' + n + ' », ou choisissez « Gratuit ».'); tiers.push({ name: n, price: tt[i] === 'free' ? 0 : +tp[i], quota: q }); });
+    const ts0 = f.getAll('ts'), te0 = f.getAll('te'); f.getAll('tn').forEach((n, i) => { if (ts0[i] && te0[i] && new Date(ts0[i]) >= new Date(te0[i])) throw new Error('Billet « ' + n.trim() + ' » : la fin de la vente doit être après son début.'); });
     if (new Set(tiers.map(t => t.name.toLowerCase())).size !== tiers.length) throw new Error('Deux catégories de billets portent le même nom.');
     if (!tiers.length) throw new Error('Ajoutez au moins une catégorie avec un nombre de places.');
     const c = pal[Math.floor(Math.random() * pal.length)];
