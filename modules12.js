@@ -209,4 +209,4 @@ render = async function () { await _render12(); document.querySelectorAll('form[
 
 Object.assign(EN, { 'Mes événements': 'My events', 'Créer un événement': 'Create an event', 'Informations générales': 'General information', 'Lieu': 'Venue', 'Dates': 'Dates', 'Billets': 'Tickets', 'Publication': 'Publishing', 'Enregistrer l\'événement': 'Save event', '+ Ajouter une date': '+ Add a date', '+ Ajouter un billet': '+ Add a ticket' });
 
-boot();
+// boot() est appelé à la fin de modules13.js, chargé après ce fichier.
