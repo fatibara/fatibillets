@@ -90,7 +90,7 @@ const CAR_TABS = [['', 'Tableau de bord'], ['trajets', 'Trajets'], ['reservation
 VIEWS.transporteur = async p => {
   if (!ME) return needLogin(); if (role() !== 'transporteur') return denied();
   let D; try { D = await rpc2('carrier_dashboard'); } catch (e) { return box('Espace transporteur indisponible', `<p class="mut">${esc(e.message)}</p>`); }
-  window.__car = D; const tab = p[1] || '', now = Date.now(), up = D.trips.filter(t => t.status === 'programme' && ts(t.departs_at) > now - 6 * 36e5);
+  window.__car = D; const tab = p[1] || '', now = Date.now(), up = D.trips.filter(t => ['programme', 'embarquement'].includes(t.status) && ts(t.departs_at) > now - 6 * 36e5);
   const opt = (L, sel, lab) => L.map(x => `<option value="${x.id}" ${sel === x.id ? 'selected' : ''}>${esc(lab(x))}</option>`).join('');
   let body;
   if (tab === 'trajets') {

@@ -146,4 +146,4 @@ F.carPayout = async f => { const ref = await rpc2('carrier_request_payout', { p_
 
 Object.assign(EN, { 'Rester anonyme': 'Stay anonymous', 'Voir et voter': 'View and vote', 'Voir le profil': 'View profile', 'Mes billets de transport': 'My transport tickets', 'Demander un paiement': 'Request a payout', 'Cartes': 'Cards', 'Classement': 'Ranking' });
 
-boot();
+// boot() est appelé à la fin de modules14.js, chargé après ce fichier.
