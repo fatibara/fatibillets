@@ -411,4 +411,4 @@ Object.assign(I, {
 
 Object.assign(EN, { 'Contrôle transport': 'Transport control', 'SCANNER UN BILLET': 'SCAN A TICKET', 'BILLET VALIDÉ': 'TICKET VALID', 'Suivi en temps réel': 'Live tracking', 'Lignes': 'Routes', 'Agents et appareils': 'Agents and devices', 'Historique des scans': 'Scan history', 'Départs': 'Departures', 'Mes opérations': 'My operations' });
 
-boot();
+// boot() est appelé à la fin de modules15.js, chargé après ce fichier.
